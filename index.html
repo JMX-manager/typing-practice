@@ -25,7 +25,6 @@
   header p{font-size:12px; color:#bae6fd; margin-top:4px;}
   main{flex:1; padding:16px; max-width:760px; width:100%; margin:0 auto;}
 
-  /* 模式选择 */
   .modes{display:flex; gap:8px; margin-bottom:14px;}
   .mode-btn{
     flex:1; padding:12px 8px; border:1px solid var(--border);
@@ -34,7 +33,6 @@
   }
   .mode-btn.active{background:var(--accent); color:#083344; border-color:var(--accent); font-weight:600;}
 
-  /* 实时统计 */
   .stats{
     display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px;
   }
@@ -42,7 +40,6 @@
   .stat .num{font-size:20px; font-weight:700; color:var(--accent);}
   .stat .lab{font-size:11px; color:var(--muted); margin-top:2px;}
 
-  /* 目标文本 */
   .target-wrap{
     background:var(--panel); border:1px solid var(--border); border-radius:14px;
     padding:16px; margin-bottom:12px; min-height:80px;
@@ -50,13 +47,18 @@
     user-select:none;
   }
   .target-wrap .done{color:#475569;}
-  .target-wrap .cur{
-    background:var(--accent); color:#083344; border-radius:3px;
-  }
+  .target-wrap .cur{background:var(--accent); color:#083344; border-radius:3px;}
   .target-wrap .good{color:var(--ok);}
   .target-wrap .bad{color:var(--err); background:rgba(239,68,68,.15); border-radius:3px;}
 
-  /* 隐藏输入框触发系统键盘 */
+  /* 输入提示区：词语模式显示当前要打的词，其余显示已输入原文 */
+  .now-badge{
+    text-align:center; font-size:15px; color:var(--accent);
+    background:var(--panel2); border:1px dashed var(--accent);
+    border-radius:10px; padding:8px; margin-bottom:10px; min-height:20px;
+    font-weight:600; letter-spacing:1px; word-break:break-all;
+  }
+
   .input-zone{margin-bottom:14px;}
   #ghi{
     width:100%; height:52px; font-size:18px; padding:0 12px;
@@ -67,7 +69,6 @@
   #ghi::placeholder{color:#475569;}
   .keyboard-hint{font-size:11px; color:var(--muted); margin-top:6px;}
 
-  /* 错误分析 */
   .analysis{
     background:var(--panel); border:1px solid var(--border); border-radius:14px;
     padding:14px 16px; margin-bottom:14px;
@@ -82,6 +83,7 @@
   .err-char{color:var(--err); font-weight:700;}
   .exp-char{color:var(--ok); font-weight:700;}
   .empty-note{color:#475569; font-size:13px;}
+  .warn-note{color:#f59e0b; font-size:12px; margin-top:4px;}
 
   .btns{display:flex; gap:10px;}
   .btn{
@@ -90,7 +92,6 @@
   .btn-primary{background:var(--accent); color:#083344;}
   .btn-ghost{background:var(--panel); color:var(--muted); border:1px solid var(--border);}
 
-  /* 完成弹窗 */
   .result{
     display:none; position:fixed; inset:0; background:rgba(2,6,23,.85);
     align-items:center; justify-content:center; padding:20px; z-index:50;
@@ -128,6 +129,8 @@
     <div class="stat"><div class="num" id="st-prog">0%</div><div class="lab">进度</div></div>
     <div class="stat"><div class="num" id="st-errs">0</div><div class="lab">错误</div></div>
   </div>
+
+  <div class="now-badge" id="now-badge"></div>
 
   <div class="target-wrap" id="target"></div>
 
@@ -168,11 +171,11 @@
 <script>
 /* ============ 素材库 ============ */
 const WORDS=[
-  "苹果 香蕉 橘子 葡萄 西瓜 草莓 蓝莓 樱桃 芒果 菠萝",
-  "红色 蓝色 绿色 黄色 紫色 粉色 黑色 白色 灰色 橙色",
-  "学习 工作 阅读 写作 思考 记忆 练习 坚持 专注 高效",
-  "电脑 手机 键盘 屏幕 鼠标 网络 程序 网站 数据 代码",
-  "清晨 午后 黄昏 深夜 春夏 秋冬 过去 现在 未来 当下"
+  ["苹果","香蕉","橘子","葡萄","西瓜","草莓","蓝莓","樱桃","芒果","菠萝"],
+  ["红色","蓝色","绿色","黄色","紫色","粉色","黑色","白色","灰色","橙色"],
+  ["学习","工作","阅读","写作","思考","记忆","练习","坚持","专注","高效"],
+  ["电脑","手机","键盘","屏幕","鼠标","网络","程序","网站","数据","代码"],
+  ["清晨","午后","黄昏","深夜","春夏","秋冬","过去","现在","未来","当下"]
 ];
 const SENTENCES=[
   "只要坚持练习，打字速度一定会越来越快。",
@@ -194,110 +197,288 @@ const PASSAGES=[
 
 /* ============ 状态 ============ */
 let mode="words";
-let text="";
-let chars=[];
-let pos=0;          // 当前应打字符下标（0-based）
-let startTime=null; // 本次开始的绝对时间戳
-let lastTime=null;  // 有键时的最近时间戳（算速度用）
+let text="";            
+let chars=[];          
+let pos=0;              // 已正确完成的字符数（累积）
+let items=[];           // words模式：词数组；其他模式：每字当一项
+let itemMode=false;     // 是否按"整词"判定（words模式）
+let pending="";         // 当前词已可靠输入的累积（含中文），纯展示用
+let startTime=null;
+let lastTime=null;
 let errCount=0;
-let errMap={};      // 错误类型计数
+let errMap={};
+
 const g=document.getElementById("ghi");
 const targetEl=document.getElementById("target");
+const badgeEl=document.getElementById("now-badge");
 
-function pickText(){
-  let arr = mode==="words"?WORDS : mode==="sentences"?SENTENCES : PASSAGES;
-  let t = arr[Math.floor(Math.random()*arr.length)];
-  // words 模式打乱词序增强效果
-  if(mode==="words"){ t = t.split(/\s+/).sort(()=>Math.random()-.5).join(" "); }
-  return t;
+/* --- 工具 --- */
+function escapeHtml(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function isCJK(ch){ return /[\u4e00-\u9fff\u3400-\u4dbf]/.test(ch); }
+function isPunct(ch){ return /[，。、；：？！“”‘’《》（）…—·,.?!;:'"()\-—\s，。]/.test(ch); }
+/* 一个字符是否是本段"合法输出字符"（中文字/目标出现的标点/空格） */
+function makeAllowedSet(){
+  const s=new Set();
+  for(const c of text){ s.add(c); }
+  return s;
 }
-function reset(){
-  chars = text.replace(/\s/g," ").split("");
-  pos=0; errCount=0; errMap={}; lastTime=null;
-  g.value=""; render();
+let allowed=null;
+let pendingPinyin="";
+
+/* --- 解析目标为"判定单元" --- */
+function buildItems(){
+  items=[];
+  if(mode==="words"){
+    // 词数组已是打好的词序列，直接照录（可重复随机抽取）
+    items = text.replace(/\s+/g," ").trim().split(" ").map(w=>w.trim()).filter(Boolean);
+    itemMode=true;
+    // chars 用于渲染整段
+    chars = text.split("");
+  }else{
+    // 句子/长段：逐字单元
+    chars = text.split("");
+    items = chars.map(c=>c);
+    itemMode=false;
+  }
+}
+
+/* --- 初始化/切换 --- */
+function pickText(){
+  if(mode==="words"){
+    const arr=WORDS[Math.floor(Math.random()*WORDS.length)];
+    // 打乱顺序
+    return arr.slice().sort(()=>Math.random()-.5).join(" ");
+  }else{
+    const arr=mode==="sentences"?SENTENCES:PASSAGES;
+    return arr[Math.floor(Math.random()*arr.length)];
+  }
 }
 function startNew(){
-  text=pickText(); chars=text.split("");
-  startTime=Date.now(); lastTime=null; pos=0; errCount=0; errMap={};
-  g.value=""; render();
+  text=pickText();
+  allowed=makeAllowedSet();
+  pendingPinyin="";
+  buildItems();
+  pos=0; errCount=0; errMap={}; lastTime=null;
+  startTime=Date.now();
+  g.value="";
+  render();
+  updateBadge("");
   g.focus();
 }
+function reset(){
+  pendingPinyin="";
+  pos=0; errCount=0; errMap={}; lastTime=null;
+  g.value="";
+  render();
+  updateBadge("");
+}
+
+/* --- 渲染目标文本 --- */
 function render(){
+  // 根据 pos 找出每个字符状态（逐字渲染，方便 visual）
   let html="";
+  const seg = itemMode ? pos /* words: pos = 已打词数 */ : pos;
+  // 计算已处理字符总数（words 模式下把已打词的字符数加起来）
+  let typedCharCount = 0;
+  if(itemMode){
+    for(let i=0;i<pos;i++) typedCharCount += items[i].length;
+  } else {
+    typedCharCount = pos;
+  }
+
+  // 逐字符上色
+  let ci=0; // 字符扫描序号
+  let itemIdx=0; let itemOffset=0;
   for(let i=0;i<chars.length;i++){
-    const c=chars[i]===" "?"&nbsp;":escapeHtml(chars[i]);
+    const c=chars[i];
     let cls="";
-    if(i<pos) cls="done";
-    else if(i===pos){
-      cls = lastBad ? "bad cur" : "cur";
+    const isSpace = c===" "||c==="\u3000";
+    const esc = isSpace ? "&nbsp;" : escapeHtml(c);
+    // 判断当前字符是否已"完成"
+    let completed=false;
+    if(itemMode){
+      // 已打词覆盖
+      if(itemIdx < pos){
+        const wi=items[itemIdx];
+        if(itemOffset < wi.length){
+          if(wi[itemOffset]===c) completed=true;
+        }
+        itemOffset++;
+        if(itemOffset>=wi.length){ itemIdx++; itemOffset=0; }
+      }
+      // 当前正在打的词（下一个）
+      const curWord = pos < items.length ? items[pos] : null;
+      if(curWord && typeof curWord==="string" && itemIdx===pos){
+        if(itemOffset >=0 && itemOffset<curWord.length && curWord[itemOffset]===c){
+          cls="cur";
+        }
+      }
+    } else {
+      completed = i < pos;
+      if(i===pos) cls="cur";
     }
-    html+=`<span class="${cls}">${c}</span>`;
+
+    if(completed) cls="done";
+    html+=`<span class="${cls}">${esc}</span>`;
   }
   targetEl.innerHTML=html;
   updateStats();
 }
-let lastBad=false;
 
+/* --- 统计 --- */
+function typedTotalChars(){
+  // 已正确完成的字符总数（用于速度/进度/正确率）
+  if(itemMode){
+    let n=0; for(let i=0;i<pos;i++) n+=items[i].length;
+    return n;
+  }
+  return pos;
+}
 function updateStats(){
   const now=Date.now();
-  // 速度：按最近有效输入区间
-  let pace=0;
-  if(lastTime && now>lastTime){
-    const seg=(now-startTime)/1000;
-    pace = seg>0 ? Math.round(pos/(seg/60)) : 0;
-  }
+  const typed=typedTotalChars();
   const total=chars.length;
-  const typed=pos;
+  const seg=(now-startTime)/1000;
+  const pace = seg>0 && typed>0 ? Math.round(typed/(seg/60)) : 0;
   const prog= total? Math.round(typed/total*100):0;
-  // 正确率 = 打对的字符 / 总已打字符（错误按多1计）
-  const acc = typed+errCount>0 ? Math.max(0, Math.round(typed/(typed+errCount)*100)) : 100;
+  const acc = typed+errCount>0 ? Math.max(0,Math.round(typed/(typed+errCount)*100)) : 100;
   document.getElementById("st-pace").textContent=pace;
   document.getElementById("st-acc").textContent=acc+"%";
   document.getElementById("st-prog").textContent=prog+"%";
   document.getElementById("st-errs").textContent=errCount;
 }
 
-function escapeHtml(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
-
-/* ============ 输入处理 ============ */
-g.addEventListener("input", function(e){
-  const val=g.value;
-  // 取最后输入的字符（可能有粘贴，取差）
-  let typedChar = null;
-  if(val.length>=1){ typedChar = val[val.length-1]; }
-
-  if(pos>=chars.length){ g.blur(); showResult(); return; }
-
-  if(typedChar===null){ g.value=""; return; }
-
-  if(!lastTime) lastTime=Date.now();
+/* --- 输入处理（核心：差量比对 + 拼音免疫） --- */
+let lastValue="";
+function onInput(){
   lastTime=Date.now();
+  if(!startTime) startTime=lastTime;
 
-  const expected = chars[pos];
-  if(typedChar===expected){
-    // 正确
-    lastBad=false;
-    pos++;
-  }else{
-    // 错误
-    lastBad=true;
-    errCount++;
-    const key=expected+"→"+typedChar;
-    errMap[key]=(errMap[key]||0)+1;
-    // 保留错误字符但不前进；清空输入框重新打
+  const val=g.value;
+  // 1) 用户删除了字符（回退）
+  if(val.length < lastValue.length){
+    // 撤销：我们不管拼音缓冲，直接回退 pendingPinyin 与 pending 展示
+    pendingPinyin="";
     g.value="";
-    render();  // 重绘显示错误标红
-    updateErrors();
+    lastValue="";
+    render();
+    updateBadge("");
     return;
   }
-  g.value="";
+  // 2) 新增内容 = val 相比 lastValue 的尾巴
+  const added = val.slice(lastValue.length);
+  lastValue=val;
+
+  for(const ch of added){
+    if(ch==="\n"){ continue; }
+    if(isCJK(ch) || isPunct(ch)){
+      // 中文输出（候选上屏）——作为真正输入处理
+      handleRealChar(ch);
+    } else {
+      // 非中文输出：可能是拼音预选字母 / 空格确认 / 数字
+      // 空格：拼音输入法里常作为"确认候选"，忽略即可；其他字母忽略（拼音缓冲）
+      // 若允许集里含该字符（如英文/数字目标），才当真实输入
+      if(allowed.has(ch)){
+        handleRealChar(ch);
+      }
+      // 否则视为拼音缓冲/候选确认，直接忽略，绝不报错
+    }
+  }
+  // 清空输入框，避免累积
+  if(g.value.length> (itemMode? items[pos]?.length||40 : 6)){
+    g.value=""; lastValue="";
+  }
+}
+
+function handleRealChar(ch){
+  if(finished){ return; }
+  if(!lastTime) lastTime=Date.now();
+
+  const total=chars.length;
+  const typed=typedTotalChars();
+  if(typed>=total){ finish(); return; }
+
+  // 判断本单元应有的字符
+  let expected;
+  if(itemMode){
+    if(pos<items.length){ expected=items[pos]; }
+    else { finish(); return; }
+    // 词语模式：比对整词
+    const word=expected;
+    // 用累积比较：收集用户已输入的该词字符
+    currentWordInput += ch;
+    if(word.length===1){
+      if(ch===word[0]){ itemOk(); }
+      else { onWordErr(word, ch, currentWordInput); }
+      currentWordInput="";
+      return;
+    }
+    // 多字词：整词匹配
+    if(currentWordInput === word){
+      itemOk(); currentWordInput="";
+    } else if(word.startsWith(currentWordInput)){
+      // 前缀正确，继续等
+      updateBadge(currentWordInput);
+    } else {
+      onWordErr(word, ch, currentWordInput);
+      currentWordInput="";
+    }
+    return;
+  } else {
+    expected=chars[pos];
+    if(ch===expected){
+      pos++;
+      render();
+    }else{
+      onCharErr(expected, ch);
+      // 句子/长段模式：错误后仍前进一步，避免死锁（可继续往下打），同时记错
+      // 但更符合习惯：错误不前进。我们让光标停留，重打。为防卡死，若连续错同一位，仍停留等待正确。
+      render();
+    }
+    return;
+  }
+}
+
+/* 整词正确：pos 前进一个词 */
+let currentWordInput="";
+function itemOk(){
+  pendingPinyin="";
+  pos++;
+  currentWordInput="";
+  render();
+  updateBadge("");
+}
+function onWordErr(word, ch, inputSoFar){
+  errCount++;
+  const shown = ch ? ch : "(已输入:"+inputSoFar+")";
+  const key=word+"→"+shown;
+  errMap[key]=(errMap[key]||0)+1;
+  pendingPinyin="";
+  currentWordInput="";
+  g.value=""; lastValue="";
   render();
   updateErrors();
+  updateBadge("");
+}
+function onCharErr(exp, got){
+  errCount++;
+  const key=exp+"→"+got;
+  errMap[key]=(errMap[key]||0)+1;
+  pendingPinyin="";
+  g.value=""; lastValue="";
+  render();
+  updateErrors();
+}
+function updateBadge(str){
+  if(itemMode){
+    const w = pos<items.length? items[pos] : "";
+    badgeEl.textContent = w? ("请打：『"+w+"』"+(str? "｜已输入 "+str : "")) : "已完成";
+  } else {
+    badgeEl.textContent = "";
+  }
+}
 
-  if(pos>=chars.length){ g.blur(); showResult(); }
-});
-
-/* ============ 错误分析面板 ============ */
+/* --- 错误面板 --- */
 function updateErrors(){
   const list=document.getElementById("err-list");
   const keys=Object.keys(errMap);
@@ -307,47 +488,56 @@ function updateErrors(){
   }
   list.innerHTML="";
   keys.slice(0,6).forEach(k=>{
-    const [exp,got]=k.split("→");
+    const arrow=k.indexOf("→");
+    const exp=k.slice(0,arrow), got=k.slice(arrow+1);
     const li=document.createElement("li");
     li.innerHTML=`<span>应打 <span class="exp-char">${escapeHtml(exp)}</span>，打成 <span class="err-char">${escapeHtml(got)}</span>，共 ${errMap[k]} 次</span>
-      <span class="why">提示：目标字符是“${escapeHtml(exp)}”，请确认键盘该键位置</span>`;
+      <span class="why">提示：注意字符“${escapeHtml(exp)}”的键位</span>`;
     list.appendChild(li);
   });
 }
 
-/* ============ 完成 ============ */
-function showResult(){
+/* --- 完成 --- */
+let finished=false;
+function finish(){
+  if(finished) return;
+  finished=true;
   const now=Date.now();
-  const secs=Math.round((now-startTime)/1000);
-  const pace=secs>0? Math.round(chars.length/(secs/60)) : 0;
-  const acc= chars.length+errCount>0 ? Math.round(chars.length/(chars.length+errCount)*100):100;
+  const secs=Math.max(1,Math.round((now-startTime)/1000));
+  const total=typedTotalChars();
+  const pace=secs>0? Math.round(total/(secs/60)) : 0;
+  const acc= total+errCount>0 ? Math.round(total/(total+errCount)*100):100;
   document.getElementById("r-pace").textContent=pace;
   document.getElementById("r-acc").textContent=acc+"%";
   document.getElementById("r-time").textContent=secs+"s";
   document.getElementById("r-errs").textContent=errCount;
   document.getElementById("result").classList.add("show");
+  g.blur();
 }
 function closeResult(){
   document.getElementById("result").classList.remove("show");
   g.focus();
 }
 
-/* ============ 按钮/模式 ============ */
+/* ============ 按钮/事件 ============ */
+g.addEventListener("input", onInput);
 document.querySelectorAll(".mode-btn").forEach(b=>{
   b.addEventListener("click",function(){
     document.querySelectorAll(".mode-btn").forEach(x=>x.classList.remove("active"));
     this.classList.add("active");
     mode=this.dataset.mode;
+    finished=false;
+    currentWordInput="";
     startNew();
   });
 });
-document.getElementById("btn-restart").addEventListener("click",reset);
-document.getElementById("btn-skip").addEventListener("click",startNew);
-
-/* 点击任意处聚焦输入框唤出键盘 */
+document.getElementById("btn-restart").addEventListener("click",()=>{ finished=false; currentWordInput=""; reset(); g.focus(); });
+document.getElementById("btn-skip").addEventListener("click",()=>{ finished=false; currentWordInput=""; startNew(); });
 targetEl.addEventListener("click",()=>g.focus());
 
 /* 启动 */
+finished=false;
+currentWordInput="";
 startNew();
 </script>
 </body>
