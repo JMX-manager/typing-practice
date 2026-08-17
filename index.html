@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>打字训练 · Typing Trainer</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#1e293b; --panel2:#263449;
+    --text:#e2e8f0; --muted:#94a3b8;
+    --ok:#22c55e; --err:#ef4444; --accent:#38bdf8;
+    --border:#334155;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    min-height:100vh; display:flex; flex-direction:column;
+  }
+  header{
+    padding:16px 18px 12px; text-align:center;
+    background:linear-gradient(135deg,#0c4a6e,#1e3a8a);
+  }
+  header h1{font-size:20px; letter-spacing:1px;}
+  header p{font-size:12px; color:#bae6fd; margin-top:4px;}
+  main{flex:1; padding:16px; max-width:760px; width:100%; margin:0 auto;}
+
+  /* 模式选择 */
+  .modes{display:flex; gap:8px; margin-bottom:14px;}
+  .mode-btn{
+    flex:1; padding:12px 8px; border:1px solid var(--border);
+    background:var(--panel); color:var(--muted); border-radius:12px;
+    font-size:14px; cursor:pointer; transition:.15s;
+  }
+  .mode-btn.active{background:var(--accent); color:#083344; border-color:var(--accent); font-weight:600;}
+
+  /* 实时统计 */
+  .stats{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px;
+  }
+  .stat{background:var(--panel); border-radius:12px; padding:10px 6px; text-align:center;}
+  .stat .num{font-size:20px; font-weight:700; color:var(--accent);}
+  .stat .lab{font-size:11px; color:var(--muted); margin-top:2px;}
+
+  /* 目标文本 */
+  .target-wrap{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:16px; margin-bottom:12px; min-height:80px;
+    font-size:20px; line-height:1.8; letter-spacing:.5px; word-break:break-all;
+    user-select:none;
+  }
+  .target-wrap .done{color:#475569;}
+  .target-wrap .cur{
+    background:var(--accent); color:#083344; border-radius:3px;
+  }
+  .target-wrap .good{color:var(--ok);}
+  .target-wrap .bad{color:var(--err); background:rgba(239,68,68,.15); border-radius:3px;}
+
+  /* 隐藏输入框触发系统键盘 */
+  .input-zone{margin-bottom:14px;}
+  #ghi{
+    width:100%; height:52px; font-size:18px; padding:0 12px;
+    background:#0b1220; color:var(--text);
+    border:2px solid var(--accent); border-radius:12px; outline:none;
+    caret-color:var(--accent);
+  }
+  #ghi::placeholder{color:#475569;}
+  .keyboard-hint{font-size:11px; color:var(--muted); margin-top:6px;}
+
+  /* 错误分析 */
+  .analysis{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:14px 16px; margin-bottom:14px;
+  }
+  .analysis h3{font-size:14px; color:var(--accent); margin-bottom:10px; display:flex; align-items:center; gap:6px;}
+  .analysis .err-list{list-style:none;}
+  .analysis .err-list li{
+    background:var(--panel2); border-radius:8px; padding:8px 12px; margin-bottom:6px;
+    font-size:14px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  }
+  .analysis .err-list .why{color:var(--muted); font-size:12px; flex:1 1 100%;}
+  .err-char{color:var(--err); font-weight:700;}
+  .exp-char{color:var(--ok); font-weight:700;}
+  .empty-note{color:#475569; font-size:13px;}
+
+  .btns{display:flex; gap:10px;}
+  .btn{
+    flex:1; padding:13px; border:none; border-radius:12px; font-size:15px; font-weight:600; cursor:pointer;
+  }
+  .btn-primary{background:var(--accent); color:#083344;}
+  .btn-ghost{background:var(--panel); color:var(--muted); border:1px solid var(--border);}
+
+  /* 完成弹窗 */
+  .result{
+    display:none; position:fixed; inset:0; background:rgba(2,6,23,.85);
+    align-items:center; justify-content:center; padding:20px; z-index:50;
+  }
+  .result.show{display:flex;}
+  .result-card{
+    background:var(--panel); border:1px solid var(--accent); border-radius:18px;
+    padding:28px 24px; max-width:340px; width:100%; text-align:center;
+  }
+  .result-card h2{font-size:22px; margin-bottom:16px; color:var(--accent);}
+  .result-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;}
+  .result-grid .cell{background:var(--panel2); border-radius:12px; padding:14px 8px;}
+  .result-grid .cell .n{font-size:24px; font-weight:700;}
+  .result-grid .cell .t{font-size:12px; color:var(--muted); margin-top:2px;}
+
+  footer{padding:14px; text-align:center; font-size:12px; color:#475569;}
+</style>
+</head>
+<body>
+<header>
+  <h1>⌨️ 打字训练</h1>
+  <p>随时开始 · 实时纠错 · 实时分析</p>
+</header>
+
+<main>
+  <div class="modes">
+    <button class="mode-btn active" data-mode="words">词语</button>
+    <button class="mode-btn" data-mode="sentences">句子</button>
+    <button class="mode-btn" data-mode="passage">长段文本</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="num" id="st-pace">0</div><div class="lab">字/分</div></div>
+    <div class="stat"><div class="num" id="st-acc">100%</div><div class="lab">正确率</div></div>
+    <div class="stat"><div class="num" id="st-prog">0%</div><div class="lab">进度</div></div>
+    <div class="stat"><div class="num" id="st-errs">0</div><div class="lab">错误</div></div>
+  </div>
+
+  <div class="target-wrap" id="target"></div>
+
+  <div class="input-zone">
+    <input type="text" id="ghi" autocomplete="off" autocorrect="off" autocapitalize="off"
+           spellcheck="false" inputmode="text" placeholder="点击这里开始打字…" />
+    <div class="keyboard-hint">↓ 点击输入框会弹出手机系统键盘，直接打字即可</div>
+  </div>
+
+  <div class="analysis">
+    <h3>🧐 实时纠错分析</h3>
+    <ul class="err-list" id="err-list">
+      <li class="empty-note">还没有错误，继续保持 ✨</li>
+    </ul>
+  </div>
+
+  <div class="btns">
+    <button class="btn btn-ghost" id="btn-restart">重新开始</button>
+    <button class="btn btn-primary" id="btn-skip">换一段</button>
+  </div>
+</main>
+
+<div class="result" id="result">
+  <div class="result-card">
+    <h2>🎉 完成！</h2>
+    <div class="result-grid">
+      <div class="cell"><div class="n" id="r-pace">0</div><div class="t">字/分</div></div>
+      <div class="cell"><div class="n" id="r-acc">100%</div><div class="t">正确率</div></div>
+      <div class="cell"><div class="n" id="r-time">0s</div><div class="t">用时</div></div>
+      <div class="cell"><div class="n" id="r-errs">0</div><div class="t">总错误</div></div>
+    </div>
+    <button class="btn btn-primary" onclick="closeResult()">再来一次</button>
+  </div>
+</div>
+
+<footer>Typing Trainer · GitHub Pages 托管 · 数据不出本地</footer>
+
+<script>
+/* ============ 素材库 ============ */
+const WORDS=[
+  "苹果 香蕉 橘子 葡萄 西瓜 草莓 蓝莓 樱桃 芒果 菠萝",
+  "红色 蓝色 绿色 黄色 紫色 粉色 黑色 白色 灰色 橙色",
+  "学习 工作 阅读 写作 思考 记忆 练习 坚持 专注 高效",
+  "电脑 手机 键盘 屏幕 鼠标 网络 程序 网站 数据 代码",
+  "清晨 午后 黄昏 深夜 春夏 秋冬 过去 现在 未来 当下"
+];
+const SENTENCES=[
+  "只要坚持练习，打字速度一定会越来越快。",
+  "每天进步一点点，积少成多，终会看见改变。",
+  "科技让生活更美好，也让学习变得更高效。",
+  "用心做好每一件小事，就是最大的不平凡。",
+  "读万卷书，行万里路，见识更广阔的世界。",
+  "没有什么成功是一蹴而就的，唯有日复一日地坚持。",
+  "把复杂的事情简单化，把简单的事情重复做。",
+  "清晨的阳光照进窗台，新的一天又开始了。"
+];
+const PASSAGES=[
+  "人生就像一场旅行，不必在乎目的地，在乎的是沿途的风景以及看风景的心情。让心灵去旅行，去感受每一段旅程带来的美好与感动。",
+  "读书使人充实，讨论使人机智，笔记使人准确。读史使人明智，读诗使人灵秀，数学使人周密，科学使人深刻。凡有所学，皆成性格。",
+  "时间是最公平的，它给每个人都是二十四小时。差别只在于如何利用。善于利用时间的人，总能在平凡中创造不平凡的价值，在忙碌中收获充实。",
+  "每个人都有一段沉默的时光，那段时间是付出了很多努力却得不到结果的日子，我们把它叫做扎根。根扎得越深，向上生长得就越有力。",
+  "生活不是等待风暴过去，而是学会在雨中跳舞。面对困难与挑战，我们或许无法选择环境，但可以选择态度，用乐观和坚韧书写属于自己的故事。"
+];
+
+/* ============ 状态 ============ */
+let mode="words";
+let text="";
+let chars=[];
+let pos=0;          // 当前应打字符下标（0-based）
+let startTime=null; // 本次开始的绝对时间戳
+let lastTime=null;  // 有键时的最近时间戳（算速度用）
+let errCount=0;
+let errMap={};      // 错误类型计数
+const g=document.getElementById("ghi");
+const targetEl=document.getElementById("target");
+
+function pickText(){
+  let arr = mode==="words"?WORDS : mode==="sentences"?SENTENCES : PASSAGES;
+  let t = arr[Math.floor(Math.random()*arr.length)];
+  // words 模式打乱词序增强效果
+  if(mode==="words"){ t = t.split(/\s+/).sort(()=>Math.random()-.5).join(" "); }
+  return t;
+}
+function reset(){
+  chars = text.replace(/\s/g," ").split("");
+  pos=0; errCount=0; errMap={}; lastTime=null;
+  g.value=""; render();
+}
+function startNew(){
+  text=pickText(); chars=text.split("");
+  startTime=Date.now(); lastTime=null; pos=0; errCount=0; errMap={};
+  g.value=""; render();
+  g.focus();
+}
+function render(){
+  let html="";
+  for(let i=0;i<chars.length;i++){
+    const c=chars[i]===" "?"&nbsp;":escapeHtml(chars[i]);
+    let cls="";
+    if(i<pos) cls="done";
+    else if(i===pos){
+      cls = lastBad ? "bad cur" : "cur";
+    }
+    html+=`<span class="${cls}">${c}</span>`;
+  }
+  targetEl.innerHTML=html;
+  updateStats();
+}
+let lastBad=false;
+
+function updateStats(){
+  const now=Date.now();
+  // 速度：按最近有效输入区间
+  let pace=0;
+  if(lastTime && now>lastTime){
+    const seg=(now-startTime)/1000;
+    pace = seg>0 ? Math.round(pos/(seg/60)) : 0;
+  }
+  const total=chars.length;
+  const typed=pos;
+  const prog= total? Math.round(typed/total*100):0;
+  // 正确率 = 打对的字符 / 总已打字符（错误按多1计）
+  const acc = typed+errCount>0 ? Math.max(0, Math.round(typed/(typed+errCount)*100)) : 100;
+  document.getElementById("st-pace").textContent=pace;
+  document.getElementById("st-acc").textContent=acc+"%";
+  document.getElementById("st-prog").textContent=prog+"%";
+  document.getElementById("st-errs").textContent=errCount;
+}
+
+function escapeHtml(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+/* ============ 输入处理 ============ */
+g.addEventListener("input", function(e){
+  const val=g.value;
+  // 取最后输入的字符（可能有粘贴，取差）
+  let typedChar = null;
+  if(val.length>=1){ typedChar = val[val.length-1]; }
+
+  if(pos>=chars.length){ g.blur(); showResult(); return; }
+
+  if(typedChar===null){ g.value=""; return; }
+
+  if(!lastTime) lastTime=Date.now();
+  lastTime=Date.now();
+
+  const expected = chars[pos];
+  if(typedChar===expected){
+    // 正确
+    lastBad=false;
+    pos++;
+  }else{
+    // 错误
+    lastBad=true;
+    errCount++;
+    const key=expected+"→"+typedChar;
+    errMap[key]=(errMap[key]||0)+1;
+    // 保留错误字符但不前进；清空输入框重新打
+    g.value="";
+    render();  // 重绘显示错误标红
+    updateErrors();
+    return;
+  }
+  g.value="";
+  render();
+  updateErrors();
+
+  if(pos>=chars.length){ g.blur(); showResult(); }
+});
+
+/* ============ 错误分析面板 ============ */
+function updateErrors(){
+  const list=document.getElementById("err-list");
+  const keys=Object.keys(errMap);
+  if(keys.length===0){
+    list.innerHTML='<li class="empty-note">还没有错误，继续保持 ✨</li>';
+    return;
+  }
+  list.innerHTML="";
+  keys.slice(0,6).forEach(k=>{
+    const [exp,got]=k.split("→");
+    const li=document.createElement("li");
+    li.innerHTML=`<span>应打 <span class="exp-char">${escapeHtml(exp)}</span>，打成 <span class="err-char">${escapeHtml(got)}</span>，共 ${errMap[k]} 次</span>
+      <span class="why">提示：目标字符是“${escapeHtml(exp)}”，请确认键盘该键位置</span>`;
+    list.appendChild(li);
+  });
+}
+
+/* ============ 完成 ============ */
+function showResult(){
+  const now=Date.now();
+  const secs=Math.round((now-startTime)/1000);
+  const pace=secs>0? Math.round(chars.length/(secs/60)) : 0;
+  const acc= chars.length+errCount>0 ? Math.round(chars.length/(chars.length+errCount)*100):100;
+  document.getElementById("r-pace").textContent=pace;
+  document.getElementById("r-acc").textContent=acc+"%";
+  document.getElementById("r-time").textContent=secs+"s";
+  document.getElementById("r-errs").textContent=errCount;
+  document.getElementById("result").classList.add("show");
+}
+function closeResult(){
+  document.getElementById("result").classList.remove("show");
+  g.focus();
+}
+
+/* ============ 按钮/模式 ============ */
+document.querySelectorAll(".mode-btn").forEach(b=>{
+  b.addEventListener("click",function(){
+    document.querySelectorAll(".mode-btn").forEach(x=>x.classList.remove("active"));
+    this.classList.add("active");
+    mode=this.dataset.mode;
+    startNew();
+  });
+});
+document.getElementById("btn-restart").addEventListener("click",reset);
+document.getElementById("btn-skip").addEventListener("click",startNew);
+
+/* 点击任意处聚焦输入框唤出键盘 */
+targetEl.addEventListener("click",()=>g.focus());
+
+/* 启动 */
+startNew();
+</script>
+</body>
+</html>
