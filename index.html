@@ -41,7 +41,7 @@
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   body{
     background:var(--bg); color:var(--text);
-    font-family:"PingFangSite",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
     min-height:100vh; display:flex; flex-direction:column;
     background-image:
       radial-gradient(1200px 600px at 10% -10%, rgba(2,132,199,.25), transparent 60%),
@@ -75,7 +75,7 @@
     font-size:14px; cursor:pointer; transition:.15s;
     backdrop-filter:blur(var(--glass-blur)); -webkit-backdrop-filter:blur(var(--glass-blur));
   }
-  .mode-btn.active{background:var(--accent); color:#083344; border-color:var(--accent); font-weight:600;}
+  .mode-btn.active{background:var(--accent); color:#083344; border-color:var(--accent); font-weight:500;}
 
   .stats{
     display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px;
@@ -83,7 +83,7 @@
   .stat{background:var(--panel); border-radius:12px; padding:10px 6px; text-align:center;
     backdrop-filter:blur(var(--glass-blur)); -webkit-backdrop-filter:blur(var(--glass-blur));
     border:1px solid var(--border); box-shadow:0 6px 20px rgba(2,6,23,.06);}
-  .stat .num{font-size:20px; font-weight:700; color:var(--accent);}
+  .stat .num{font-size:20px; font-weight:500; color:var(--accent);}
   .stat .lab{font-size:11px; color:var(--muted); margin-top:2px;}
 
   /* 主题切换按钮 */
@@ -97,6 +97,7 @@
   .theme-toggle:active{transform:scale(.9);}
 
   .target-wrap{
+    font-family:"PingFangSite",-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;
     background:var(--panel); border:1px solid var(--border); border-radius:14px;
     padding:16px; margin-bottom:12px; min-height:80px;
     font-size:20px; line-height:1.8; letter-spacing:.5px; word-break:break-all;
@@ -111,10 +112,11 @@
 
   /* 输入提示区：词语模式显示当前要打的词，其余显示已输入原文 */
   .now-badge{
+    font-family:"PingFangSite",-apple-system,"PingFang SC",sans-serif;
     text-align:center; font-size:15px; color:var(--accent);
     background:var(--panel2); border:1px dashed var(--accent);
     border-radius:10px; padding:8px; margin-bottom:10px; min-height:20px;
-    font-weight:600; letter-spacing:1px; word-break:break-all;
+    font-weight:500; letter-spacing:1px; word-break:break-all;
   }
 
   /* 九键键盘可视化 */
@@ -127,7 +129,7 @@
     padding:10px 4px; text-align:center; transition:.15s;
     backdrop-filter:blur(var(--glass-blur)); -webkit-backdrop-filter:blur(var(--glass-blur));
   }
-  .nk .l{font-size:17px; font-weight:700; color:var(--accent);}
+  .nk .l{font-size:17px; font-weight:500; color:var(--accent);}
   .nk .c{font-size:11px; color:var(--muted); margin-top:2px; letter-spacing:1px;}
   .nk.hot{background:var(--accent); border-color:var(--accent);}
   .nk.hot .l,.nk.hot .c{color:#083344;}
@@ -157,14 +159,14 @@
     font-size:14px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
   }
   .analysis .err-list .why{color:var(--muted); font-size:12px; flex:1 1 100%;}
-  .err-char{color:var(--err); font-weight:700;}
-  .exp-char{color:var(--ok); font-weight:700;}
+  .err-char{color:var(--err); font-weight:500;}
+  .exp-char{color:var(--ok); font-weight:500;}
   .empty-note{color:#475569; font-size:13px;}
   .warn-note{color:#f59e0b; font-size:12px; margin-top:4px;}
 
   .btns{display:flex; gap:10px;}
   .btn{
-    flex:1; padding:13px; border:none; border-radius:12px; font-size:15px; font-weight:600; cursor:pointer;
+    flex:1; padding:13px; border:none; border-radius:12px; font-size:15px; font-weight:500; cursor:pointer;
   }
   .btn-primary{background:var(--accent); color:#083344;}
   .btn-ghost{background:var(--panel); color:var(--muted); border:1px solid var(--border);}
@@ -181,7 +183,7 @@
   .result-card h2{font-size:22px; margin-bottom:16px; color:var(--accent);}
   .result-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;}
   .result-grid .cell{background:var(--panel2); border-radius:12px; padding:14px 8px;}
-  .result-grid .cell .n{font-size:24px; font-weight:700;}
+  .result-grid .cell .n{font-size:24px; font-weight:500;}
   .result-grid .cell .t{font-size:12px; color:var(--muted); margin-top:2px;}
 
   footer{padding:14px; text-align:center; font-size:12px; color:#475569;}
@@ -211,6 +213,7 @@
   <div class="now-badge" id="now-badge"></div>
 
   <div class="nine-key" id="nine-key">
+    <div class="nk" data-key="1"><div class="l">1</div><div class="c">.,?!</div></div>
     <div class="nk" data-key="2"><div class="l">2</div><div class="c">ABC</div></div>
     <div class="nk" data-key="3"><div class="l">3</div><div class="c">DEF</div></div>
     <div class="nk" data-key="4"><div class="l">4</div><div class="c">GHI</div></div>
@@ -219,7 +222,6 @@
     <div class="nk" data-key="7"><div class="l">7</div><div class="c">PQRS</div></div>
     <div class="nk" data-key="8"><div class="l">8</div><div class="c">TUV</div></div>
     <div class="nk" data-key="9"><div class="l">9</div><div class="c">WXYZ</div></div>
-    <div class="nk" data-key="0"><div class="l">0</div><div class="c">空格</div></div>
   </div>
 
   <div class="target-wrap" id="target"></div>
@@ -466,51 +468,42 @@ function reset(){
 
 /* --- 渲染目标文本 --- */
 function render(){
-  // 根据 pos 找出每个字符状态（逐字渲染，方便 visual）
   let html="";
-  const seg = itemMode ? pos /* words: pos = 已打词数 */ : pos;
-  // 计算已处理字符总数（words 模式下把已打词的字符数加起来）
-  let typedCharCount = 0;
   if(itemMode){
-    for(let i=0;i<pos;i++) typedCharCount += items[i].length;
-  } else {
-    typedCharCount = pos;
-  }
-
-  // 逐字符上色
-  let ci=0; // 字符扫描序号
-  let itemIdx=0; let itemOffset=0;
-  for(let i=0;i<chars.length;i++){
-    const c=chars[i];
-    let cls="";
-    const isSpace = c===" "||c==="\u3000";
-    const esc = isSpace ? "&nbsp;" : escapeHtml(c);
-    // 判断当前字符是否已"完成"
-    let completed=false;
-    if(itemMode){
-      // 已打词覆盖
-      if(itemIdx < pos){
-        const wi=items[itemIdx];
-        if(itemOffset < wi.length){
-          if(wi[itemOffset]===c) completed=true;
-        }
-        itemOffset++;
-        if(itemOffset>=wi.length){ itemIdx++; itemOffset=0; }
+    // 词语模式：逐词渲染，每个词内的字符统一状态（已打/正在打/待打）
+    // 预计算每个词在整串中的全局字符起点
+    const wordStart=[]; let acc=0;
+    for(let i=0;i<items.length;i++){ wordStart.push(acc); acc+=items[i].length; acc+=1; /* 词间空格 */ }
+    let typedCharCount=0;
+    for(let i=0;i<pos;i++) typedCharCount+=items[i].length;
+    let chIdx=0;
+    for(let w=0;w<items.length;w++){
+      const wi=items[w];
+      const isDone = w<pos;
+      const isCur = w===pos;
+      for(let k=0;k<wi.length;k++){
+        const c=wi[k];
+        const isSpace=c===" "||c==="\u3000";
+        const esc=isSpace?"&nbsp;":escapeHtml(c);
+        let cls="";
+        if(isDone) cls="done";
+        else if(isCur) cls="cur";
+        html+=`<span class="${cls}">${esc}</span>`;
+        chIdx++;
       }
-      // 当前正在打的词（下一个）
-      const curWord = pos < items.length ? items[pos] : null;
-      if(curWord && typeof curWord==="string" && itemIdx===pos){
-        if(itemOffset >=0 && itemOffset<curWord.length && curWord[itemOffset]===c){
-          cls="cur";
-        }
-      }
-    } else {
-      completed = i < pos;
-      if(i===pos) cls="cur";
+      if(w<items.length-1) html+="&nbsp;"; // 词间空格
     }
-
-    if(completed) cls="done";
-    html+=`<span class="${cls}">${esc}</span>`;
+  } else {
+    // 句子/长段：逐字，当前位置高亮
+    for(let i=0;i<chars.length;i++){
+      const c=chars[i];
+      const isSpace=c===" "||c==="\u3000";
+      const esc=isSpace?"&nbsp;":escapeHtml(c);
+      let cls="";
+      if(i<pos) cls="done";
+      else if(i===pos) cls="cur";
+      html+=`<span class="${cls}">${esc}</span>`;
+    }
   }
   targetEl.innerHTML=html;
   updateStats();
@@ -556,9 +549,15 @@ function updateNineKey(letters){
     const key=k.dataset.key;
     const isHot=hotSet.has(key);
     k.classList.toggle("hot",isHot);
-    k.classList.toggle("dim", ascii.length>0 && !isHot && key!=="0");
+    k.classList.toggle("dim", ascii.length>0 && !isHot);
   });
 }
+/* 九键高亮双通道：keydown 捕获物理键位（含输入法合成态），input 兜底 */
+function nineKeyOnKey(e){
+  const k=(e.key||"");
+  if(k && /^[a-zA-Z]$/.test(k)) updateNineKey(k);
+}
+function nineKeyClear(){ updateNineKey(""); }
 
 /* --- 输入处理（核心：差量比对 + 拼音免疫） --- */
 let lastValue="";
@@ -734,6 +733,9 @@ function closeResult(){
 
 /* ============ 按钮/事件 ============ */
 g.addEventListener("input", onInput);
+g.addEventListener("keydown", nineKeyOnKey);
+g.addEventListener("compositionend", function(){ requestAnimationFrame(nineKeyClear); });
+g.addEventListener("blur", nineKeyClear);
 document.querySelectorAll(".mode-btn").forEach(b=>{
   b.addEventListener("click",function(){
     document.querySelectorAll(".mode-btn").forEach(x=>x.classList.remove("active"));
