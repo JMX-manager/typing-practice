@@ -190,7 +190,8 @@
     box-shadow:0 20px 60px rgba(2,6,23,.4);
   }
   .result-card h2{font-size:22px; margin-bottom:8px; color:var(--accent);}
-  .grade{font-size:44px; font-weight:500; color:var(--accent); margin:6px 0 2px; letter-spacing:2px;}
+  .grade{font-size:44px; font-weight:500; color:var(--accent); margin:6px 0 2px; letter-spacing:2px;
+    font-family:"PingFangSite",-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;}
   .motto{font-size:14px; color:var(--muted); margin-bottom:16px; line-height:1.6;}
   .result-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;}
   .result-grid .cell{background:var(--panel2); border-radius:12px; padding:14px 8px;}
@@ -684,6 +685,8 @@ function handleRealChar(ch){
       pos++;
       render();
       updateBadge(ch);
+      // 句子/长段：打完最后一个字立即触发完成，无需再补字符
+      if(pos>=chars.length){ finish(); }
     }else{
       onCharErr(expected, ch);
       render();
@@ -700,6 +703,11 @@ function itemOk(){
   currentWordInput="";
   render();
   updateBadge("");
+  // 打完最后一个词立即触发完成，无需再补一个字符
+  const total = itemMode
+    ? items.reduce((a,w)=>a+(w?w.length:0),0)
+    : chars.length;
+  if(pos>=items.length || typedTotalChars()>=total){ finish(); }
 }
 function onWordErr(word, ch, inputSoFar){
   errCount++;
