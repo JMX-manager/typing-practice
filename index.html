@@ -60,22 +60,22 @@
   }
   header{
     padding:16px 18px 12px; text-align:center;
-    background:linear-gradient(135deg,rgba(2,132,199,.85),rgba(30,58,138,.85));
+    background:linear-gradient(135deg,rgba(2,132,199,.9),rgba(30,58,138,.92));
     backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
     position:sticky; top:0; z-index:10;
   }
-  header h1{font-size:20px; letter-spacing:1px;}
-  header p{font-size:12px; color:#bae6fd; margin-top:4px;}
+  header h1{font-size:20px; letter-spacing:1px; color:#fff;}
+  header p{font-size:12px; color:#e0f2fe; margin-top:4px;}
   main{flex:1; padding:16px; max-width:760px; width:100%; margin:0 auto;}
 
-  .modes{display:flex; gap:8px; margin-bottom:14px;}
+  .modes{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;}
   .mode-btn{
-    flex:1; padding:12px 8px; border:1px solid var(--border);
+    flex:1 1 auto; min-width:88px; padding:11px 6px; border:1px solid var(--border);
     background:var(--panel); color:var(--muted); border-radius:12px;
-    font-size:14px; cursor:pointer; transition:.15s;
+    font-size:14px; cursor:pointer; transition:.15s; white-space:nowrap;
     backdrop-filter:blur(var(--glass-blur)); -webkit-backdrop-filter:blur(var(--glass-blur));
   }
-  .mode-btn.active{background:var(--accent); color:#083344; border-color:var(--accent); font-weight:500;}
+  .mode-btn.active{background:var(--accent); color:#fff; border-color:var(--accent); font-weight:500;}
 
   .stats{
     display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px;
@@ -106,7 +106,7 @@
     box-shadow:0 8px 24px rgba(2,6,23,.06);
   }
   .target-wrap .done{color:#475569;}
-  .target-wrap .cur{background:var(--accent); color:#083344; border-radius:3px;}
+  .target-wrap .cur{background:var(--accent); color:#fff; border-radius:3px;}
   .target-wrap .good{color:var(--ok);}
   .target-wrap .bad{color:var(--err); background:rgba(239,68,68,.15); border-radius:3px;}
 
@@ -132,18 +132,17 @@
   .nk .l{font-size:17px; font-weight:500; color:var(--accent);}
   .nk .c{font-size:11px; color:var(--muted); margin-top:2px; letter-spacing:1px;}
   .nk.hot{background:var(--accent); border-color:var(--accent);}
-  .nk.hot .l,.nk.hot .c{color:#083344;}
-  .nk.hot .c{color:#1e3a3a;}
+  .nk.hot .l,.nk.hot .c{color:#fff;}
   .nk.dim{opacity:.35;}
 
   .input-zone{margin-bottom:14px;}
   #ghi{
     width:100%; height:52px; font-size:18px; padding:0 12px;
-    background:var(--panel2); color:var(--text);
+    background:rgba(2,132,199,.14); color:#fff;
     border:2px solid var(--accent); border-radius:12px; outline:none;
     caret-color:var(--accent);
   }
-  #ghi::placeholder{color:#475569;}
+  #ghi::placeholder{color:#fff; opacity:.55;}
   .keyboard-hint{font-size:11px; color:var(--muted); margin-top:6px;}
 
   .analysis{
@@ -168,19 +167,24 @@
   .btn{
     flex:1; padding:13px; border:none; border-radius:12px; font-size:15px; font-weight:500; cursor:pointer;
   }
-  .btn-primary{background:var(--accent); color:#083344;}
+  .btn-primary{background:var(--accent); color:#fff;}
   .btn-ghost{background:var(--panel); color:var(--muted); border:1px solid var(--border);}
 
   .result{
-    display:none; position:fixed; inset:0; background:rgba(2,6,23,.85);
+    display:none; position:fixed; inset:0;
+    background:rgba(2,6,23,.45);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
     align-items:center; justify-content:center; padding:20px; z-index:50;
   }
   .result.show{display:flex;}
   .result-card{
     background:var(--panel); border:1px solid var(--accent); border-radius:18px;
     padding:28px 24px; max-width:340px; width:100%; text-align:center;
+    box-shadow:0 20px 60px rgba(2,6,23,.4);
   }
-  .result-card h2{font-size:22px; margin-bottom:16px; color:var(--accent);}
+  .result-card h2{font-size:22px; margin-bottom:8px; color:var(--accent);}
+  .grade{font-size:44px; font-weight:500; color:var(--accent); margin:6px 0 2px; letter-spacing:2px;}
+  .motto{font-size:14px; color:var(--muted); margin-bottom:16px; line-height:1.6;}
   .result-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;}
   .result-grid .cell{background:var(--panel2); border-radius:12px; padding:14px 8px;}
   .result-grid .cell .n{font-size:24px; font-weight:500;}
@@ -200,7 +204,7 @@
   <div class="modes">
     <button class="mode-btn active" data-mode="words">词语</button>
     <button class="mode-btn" data-mode="sentences">句子</button>
-    <button class="mode-btn" data-mode="passage">长段文本</button>
+    <button class="mode-btn" data-mode="passage">长段</button>
   </div>
 
   <div class="stats">
@@ -248,13 +252,18 @@
 <div class="result" id="result">
   <div class="result-card">
     <h2>🎉 完成！</h2>
+    <div class="grade" id="r-grade">A</div>
+    <div class="motto" id="r-motto"></div>
     <div class="result-grid">
       <div class="cell"><div class="n" id="r-pace">0</div><div class="t">字/分</div></div>
       <div class="cell"><div class="n" id="r-acc">100%</div><div class="t">正确率</div></div>
       <div class="cell"><div class="n" id="r-time">0s</div><div class="t">用时</div></div>
       <div class="cell"><div class="n" id="r-errs">0</div><div class="t">总错误</div></div>
     </div>
-    <button class="btn btn-primary" onclick="closeResult()">再来一次</button>
+    <div class="btns">
+      <button class="btn btn-ghost" onclick="closeResult()">取消</button>
+      <button class="btn btn-primary" id="btn-again">再来一次</button>
+    </div>
   </div>
 </div>
 
@@ -521,7 +530,9 @@ function typedTotalChars(){
 function updateStats(){
   const now=Date.now();
   const typed=typedTotalChars();
-  const total=chars.length;
+  const total = itemMode
+    ? items.reduce((a,w)=>a+(w?w.length:0),0)
+    : chars.length;
   const seg=(now-startTime)/1000;
   const pace = seg>0 && typed>0 ? Math.round(typed/(seg/60)) : 0;
   const prog= total? Math.round(typed/total*100):0;
@@ -559,13 +570,33 @@ function nineKeyOnKey(e){
 }
 function nineKeyClear(){ updateNineKey(""); }
 
-/* --- 输入处理（核心：差量比对 + 拼音免疫） --- */
+/* --- 输入处理（核心：差量比对 + 拼音免疫 + 输入法合成安全） --- */
 let lastValue="";
+let composing=false;
+let preComposeLen=0;
+function processChars(added){
+  for(const ch of added){
+    if(ch==="\n"){ continue; }
+    if(isCJK(ch) || isPunct(ch)){
+      // 中文输出（候选上屏）——作为真正输入处理
+      handleRealChar(ch);
+    } else {
+      // 非中文输出：可能是拼音预选字母 / 空格确认 / 数字
+      // 空格：拼音输入法里常作为"确认候选"，忽略即可；其他字母忽略（拼音缓冲）
+      // 若允许集里含该字符（如英文/数字目标），才当真实输入
+      if(allowed.has(ch)){
+        handleRealChar(ch);
+      }
+    }
+  }
+}
 function onInput(){
   lastTime=Date.now();
   if(!startTime) startTime=lastTime;
 
   const val=g.value;
+  // 输入法合成中：只同步基线，等 compositionend 统一提交，避免差量错位
+  if(composing){ lastValue=val; return; }
   // 1) 用户删除了字符（回退）
   if(val.length < lastValue.length){
     // 撤销：我们不管拼音缓冲，直接回退 pendingPinyin 与 pending 展示
@@ -580,56 +611,65 @@ function onInput(){
   const added = val.slice(lastValue.length);
   lastValue=val;
   updateNineKey(val);
-
-  for(const ch of added){
-    if(ch==="\n"){ continue; }
-    if(isCJK(ch) || isPunct(ch)){
-      // 中文输出（候选上屏）——作为真正输入处理
-      handleRealChar(ch);
-    } else {
-      // 非中文输出：可能是拼音预选字母 / 空格确认 / 数字
-      // 空格：拼音输入法里常作为"确认候选"，忽略即可；其他字母忽略（拼音缓冲）
-      // 若允许集里含该字符（如英文/数字目标），才当真实输入
-      if(allowed.has(ch)){
-        handleRealChar(ch);
-      }
-      // 否则视为拼音缓冲/候选确认，直接忽略，绝不报错
-    }
-  }
+  processChars(added);
   // 清空输入框，避免累积
   if(g.value.length> (itemMode? items[pos]?.length||40 : 6)){
     g.value=""; lastValue="";
   }
+}
+function onCompositionStart(){
+  composing=true;
+  preComposeLen=g.value.length;
+}
+function onCompositionEnd(){
+  composing=false;
+  const val=g.value;
+  if(val.length>=preComposeLen){
+    const committed=val.slice(preComposeLen);
+    lastValue=val;
+    updateNineKey(committed);
+    if(committed) processChars(committed);
+  } else {
+    lastValue=val;
+  }
+  if(g.value.length> (itemMode? items[pos]?.length||40 : 6)){
+    g.value=""; lastValue="";
+  }
+  requestAnimationFrame(nineKeyClear);
 }
 
 function handleRealChar(ch){
   if(finished){ return; }
   if(!lastTime) lastTime=Date.now();
 
-  const total=chars.length;
+  const total = itemMode
+    ? items.reduce((a,w)=>a+(w?w.length:0),0)  // 只算词内字符，不含词间空格
+    : chars.length;
   const typed=typedTotalChars();
   if(typed>=total){ finish(); return; }
 
   // 判断本单元应有的字符
   let expected;
+  const eq = (a,b)=> (typeof a==="string"&&typeof b==="string" && /[a-zA-Z0-9]/.test(a)&&/[a-zA-Z0-9]/.test(b))
+    ? a.toLowerCase()===b.toLowerCase()
+    : (a===b);
   if(itemMode){
     if(pos<items.length){ expected=items[pos]; }
     else { finish(); return; }
-    // 词语模式：比对整词
+    // 词语模式：比对整词（忽略大小写差异）
     const word=expected;
-    // 用累积比较：收集用户已输入的该词字符
     currentWordInput += ch;
+    const ciw = word.toLowerCase();
+    const ck = currentWordInput.toLowerCase();
     if(word.length===1){
-      if(ch===word[0]){ itemOk(); }
+      if(eq(ch,word[0])){ itemOk(); }
       else { onWordErr(word, ch, currentWordInput); }
       currentWordInput="";
       return;
     }
-    // 多字词：整词匹配
-    if(currentWordInput === word){
+    if(ck === ciw){
       itemOk(); currentWordInput="";
-    } else if(word.startsWith(currentWordInput)){
-      // 前缀正确，继续等
+    } else if(ciw.startsWith(ck)){
       updateBadge(currentWordInput);
     } else {
       onWordErr(word, ch, currentWordInput);
@@ -638,13 +678,12 @@ function handleRealChar(ch){
     return;
   } else {
     expected=chars[pos];
-    if(ch===expected){
+    if(eq(ch,expected)){
       pos++;
       render();
+      updateBadge(ch);
     }else{
       onCharErr(expected, ch);
-      // 句子/长段模式：错误后仍前进一步，避免死锁（可继续往下打），同时记错
-      // 但更符合习惯：错误不前进。我们让光标停留，重打。为防卡死，若连续错同一位，仍停留等待正确。
       render();
     }
     return;
@@ -686,7 +725,8 @@ function updateBadge(str){
     const w = pos<items.length? items[pos] : "";
     badgeEl.textContent = w? ("请打：『"+w+"』"+(str? "｜已输入 "+str : "")) : "已完成";
   } else {
-    badgeEl.textContent = "";
+    const w = pos<chars.length? chars[pos] : "";
+    badgeEl.textContent = w!=null? ("请打：『"+w+"』"+(str? "｜已输入 "+str : "")) : "已完成";
   }
 }
 
@@ -711,6 +751,20 @@ function updateErrors(){
 
 /* --- 完成 --- */
 let finished=false;
+function gradeAndMotto(pace, acc){
+  let g, m;
+  if(acc===100){
+    if(pace>=80){ g="S"; m="夯爆了！又快又准，你天生就是打字的料 🔥"; }
+    else if(pace>=50){ g="A"; m="全对！速度快一点你就是王者了，稳得一批 💪"; }
+    else if(pace>=30){ g="A-"; m="全对很棒，再加快点节奏就起飞了 ✨"; }
+    else { g="B+"; m="一个不错，慢慢提速，稳扎稳打 🦞"; }
+  } else if(acc>=95){ g="A"; m="几乎全对，手感和耐心都拉满了，牛！ 🌟"; }
+  else if(acc>=85){ g="B"; m="有点小错，但整体稳了，集中精神更上一层楼 💪"; }
+  else if(acc>=70){ g="C"; m="错误有点多，别急，慢一点打准一点 😌"; }
+  else if(acc>=50){ g="D"; m="错了不少，建议放慢速度，先求准再求快 🐢"; }
+  else { g="E"; m="拉完了……没事，重在练，重新来过找找手感 😅"; }
+  return [g,m];
+}
 function finish(){
   if(finished) return;
   finished=true;
@@ -719,10 +773,13 @@ function finish(){
   const total=typedTotalChars();
   const pace=secs>0? Math.round(total/(secs/60)) : 0;
   const acc= total+errCount>0 ? Math.round(total/(total+errCount)*100):100;
+  const [g,m]=gradeAndMotto(pace,acc);
   document.getElementById("r-pace").textContent=pace;
   document.getElementById("r-acc").textContent=acc+"%";
   document.getElementById("r-time").textContent=secs+"s";
   document.getElementById("r-errs").textContent=errCount;
+  document.getElementById("r-grade").textContent=g;
+  document.getElementById("r-motto").textContent=m;
   document.getElementById("result").classList.add("show");
   g.blur();
 }
@@ -733,8 +790,9 @@ function closeResult(){
 
 /* ============ 按钮/事件 ============ */
 g.addEventListener("input", onInput);
+g.addEventListener("compositionstart", onCompositionStart);
+g.addEventListener("compositionend", onCompositionEnd);
 g.addEventListener("keydown", nineKeyOnKey);
-g.addEventListener("compositionend", function(){ requestAnimationFrame(nineKeyClear); });
 g.addEventListener("blur", nineKeyClear);
 document.querySelectorAll(".mode-btn").forEach(b=>{
   b.addEventListener("click",function(){
@@ -749,6 +807,11 @@ document.querySelectorAll(".mode-btn").forEach(b=>{
 document.getElementById("btn-restart").addEventListener("click",()=>{ finished=false; currentWordInput=""; reset(); g.focus(); });
 document.getElementById("btn-skip").addEventListener("click",()=>{ finished=false; currentWordInput=""; startNew(); });
 targetEl.addEventListener("click",()=>g.focus());
+document.getElementById("btn-again").addEventListener("click",()=>{
+  document.getElementById("result").classList.remove("show");
+  finished=false; currentWordInput="";
+  startNew();
+});
 
 /* 启动 */
 finished=false;
