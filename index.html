@@ -5,21 +5,64 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>打字训练 · Typing Trainer</title>
 <style>
+  @font-face{
+    font-family:"PingFangSite";
+    src:url("assets/font.woff2") format("woff2");
+    font-weight:400; font-style:normal; font-display:swap;
+  }
   :root{
-    --bg:#0f172a; --panel:#1e293b; --panel2:#263449;
+    color-scheme:light dark;
+    --bg:#eef2f8; --panel:rgba(255,255,255,.72); --panel2:rgba(255,255,255,.5);
+    --text:#1e293b; --muted:#64748b;
+    --ok:#16a34a; --err:#dc2626; --accent:#0284c7;
+    --border:rgba(100,116,139,.18);
+    --glass-blur:14px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#0f172a; --panel:rgba(30,41,59,.55); --panel2:rgba(30,41,59,.3);
+      --text:#e2e8f0; --muted:#94a3b8;
+      --ok:#22c55e; --err:#ef4444; --accent:#38bdf8;
+      --border:rgba(148,163,184,.16);
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#eef2f8; --panel:rgba(255,255,255,.72); --panel2:rgba(255,255,255,.5);
+    --text:#1e293b; --muted:#64748b;
+    --ok:#16a34a; --err:#dc2626; --accent:#0284c7;
+    --border:rgba(100,116,139,.18);
+  }
+  :root[data-theme="dark"]{
+    --bg:#0f172a; --panel:rgba(30,41,59,.55); --panel2:rgba(30,41,59,.3);
     --text:#e2e8f0; --muted:#94a3b8;
     --ok:#22c55e; --err:#ef4444; --accent:#38bdf8;
-    --border:#334155;
+    --border:rgba(148,163,184,.16);
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   body{
     background:var(--bg); color:var(--text);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    font-family:"PingFangSite",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
     min-height:100vh; display:flex; flex-direction:column;
+    background-image:
+      radial-gradient(1200px 600px at 10% -10%, rgba(2,132,199,.25), transparent 60%),
+      radial-gradient(1000px 500px at 110% 10%, rgba(34,197,94,.18), transparent 55%),
+      radial-gradient(900px 700px at 50% 115%, rgba(168,85,247,.14), transparent 60%);
+    background-attachment:fixed;
+  }
+  /* 毛玻璃通用卡片 */
+  .glass{
+    background:var(--panel);
+    backdrop-filter:blur(var(--glass-blur)) saturate(1.2);
+    -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(1.2);
+    border:1px solid var(--border);
+    border-radius:16px;
+    box-shadow:0 8px 30px rgba(2,6,23,.08);
   }
   header{
     padding:16px 18px 12px; text-align:center;
-    background:linear-gradient(135deg,#0c4a6e,#1e3a8a);
+    background:linear-gradient(135deg,rgba(2,132,199,.85),rgba(30,58,138,.85));
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    position:sticky; top:0; z-index:10;
   }
   header h1{font-size:20px; letter-spacing:1px;}
   header p{font-size:12px; color:#bae6fd; margin-top:4px;}
@@ -30,21 +73,36 @@
     flex:1; padding:12px 8px; border:1px solid var(--border);
     background:var(--panel); color:var(--muted); border-radius:12px;
     font-size:14px; cursor:pointer; transition:.15s;
+    backdrop-filter:blur(var(--glass-blur)); -webkit-backdrop-filter:blur(var(--glass-blur));
   }
   .mode-btn.active{background:var(--accent); color:#083344; border-color:var(--accent); font-weight:600;}
 
   .stats{
     display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px;
   }
-  .stat{background:var(--panel); border-radius:12px; padding:10px 6px; text-align:center;}
+  .stat{background:var(--panel); border-radius:12px; padding:10px 6px; text-align:center;
+    backdrop-filter:blur(var(--glass-blur)); -webkit-backdrop-filter:blur(var(--glass-blur));
+    border:1px solid var(--border); box-shadow:0 6px 20px rgba(2,6,23,.06);}
   .stat .num{font-size:20px; font-weight:700; color:var(--accent);}
   .stat .lab{font-size:11px; color:var(--muted); margin-top:2px;}
+
+  /* 主题切换按钮 */
+  .theme-toggle{
+    position:absolute; right:14px; top:14px;
+    width:36px; height:36px; border-radius:50%;
+    background:rgba(255,255,255,.16); color:#e0f2fe;
+    border:1px solid rgba(255,255,255,.25); font-size:17px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:.15s;
+  }
+  .theme-toggle:active{transform:scale(.9);}
 
   .target-wrap{
     background:var(--panel); border:1px solid var(--border); border-radius:14px;
     padding:16px; margin-bottom:12px; min-height:80px;
     font-size:20px; line-height:1.8; letter-spacing:.5px; word-break:break-all;
     user-select:none;
+    backdrop-filter:blur(var(--glass-blur)); -webkit-backdrop-filter:blur(var(--glass-blur));
+    box-shadow:0 8px 24px rgba(2,6,23,.06);
   }
   .target-wrap .done{color:#475569;}
   .target-wrap .cur{background:var(--accent); color:#083344; border-radius:3px;}
@@ -59,10 +117,27 @@
     font-weight:600; letter-spacing:1px; word-break:break-all;
   }
 
+  /* 九键键盘可视化 */
+  .nine-key{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
+    margin-bottom:14px;
+  }
+  .nk{
+    background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:10px 4px; text-align:center; transition:.15s;
+    backdrop-filter:blur(var(--glass-blur)); -webkit-backdrop-filter:blur(var(--glass-blur));
+  }
+  .nk .l{font-size:17px; font-weight:700; color:var(--accent);}
+  .nk .c{font-size:11px; color:var(--muted); margin-top:2px; letter-spacing:1px;}
+  .nk.hot{background:var(--accent); border-color:var(--accent);}
+  .nk.hot .l,.nk.hot .c{color:#083344;}
+  .nk.hot .c{color:#1e3a3a;}
+  .nk.dim{opacity:.35;}
+
   .input-zone{margin-bottom:14px;}
   #ghi{
     width:100%; height:52px; font-size:18px; padding:0 12px;
-    background:#0b1220; color:var(--text);
+    background:var(--panel2); color:var(--text);
     border:2px solid var(--accent); border-radius:12px; outline:none;
     caret-color:var(--accent);
   }
@@ -72,6 +147,8 @@
   .analysis{
     background:var(--panel); border:1px solid var(--border); border-radius:14px;
     padding:14px 16px; margin-bottom:14px;
+    backdrop-filter:blur(var(--glass-blur)); -webkit-backdrop-filter:blur(var(--glass-blur));
+    box-shadow:0 8px 24px rgba(2,6,23,.06);
   }
   .analysis h3{font-size:14px; color:var(--accent); margin-bottom:10px; display:flex; align-items:center; gap:6px;}
   .analysis .err-list{list-style:none;}
@@ -112,6 +189,7 @@
 </head>
 <body>
 <header>
+  <button class="theme-toggle" id="theme-toggle" title="切换深浅色">🌙</button>
   <h1>⌨️ 打字训练</h1>
   <p>随时开始 · 实时纠错 · 实时分析</p>
 </header>
@@ -131,6 +209,18 @@
   </div>
 
   <div class="now-badge" id="now-badge"></div>
+
+  <div class="nine-key" id="nine-key">
+    <div class="nk" data-key="2"><div class="l">2</div><div class="c">ABC</div></div>
+    <div class="nk" data-key="3"><div class="l">3</div><div class="c">DEF</div></div>
+    <div class="nk" data-key="4"><div class="l">4</div><div class="c">GHI</div></div>
+    <div class="nk" data-key="5"><div class="l">5</div><div class="c">JKL</div></div>
+    <div class="nk" data-key="6"><div class="l">6</div><div class="c">MNO</div></div>
+    <div class="nk" data-key="7"><div class="l">7</div><div class="c">PQRS</div></div>
+    <div class="nk" data-key="8"><div class="l">8</div><div class="c">TUV</div></div>
+    <div class="nk" data-key="9"><div class="l">9</div><div class="c">WXYZ</div></div>
+    <div class="nk" data-key="0"><div class="l">0</div><div class="c">空格</div></div>
+  </div>
 
   <div class="target-wrap" id="target"></div>
 
@@ -169,6 +259,33 @@
 <footer>Typing Trainer · GitHub Pages 托管 · 数据不出本地</footer>
 
 <script>
+/* ============ 主题：自动深浅色 + 手动覆盖 ============ */
+(function(){
+  const ROOT=document.documentElement;
+  const KEY="tp-theme";
+  const btn=document.getElementById("theme-toggle");
+  const stored=localStorage.getItem(KEY);
+  if(stored==="light"||stored==="dark"){
+    ROOT.setAttribute("data-theme",stored);
+  }
+  function syncBtn(){
+    const t=ROOT.getAttribute("data-theme")
+      || (window.matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
+    btn.textContent= t==="dark" ? "☀️" : "🌙";
+  }
+  if(btn){
+    btn.addEventListener("click",function(){
+      const cur=ROOT.getAttribute("data-theme")
+        || (window.matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
+      const next= cur==="dark" ? "light" : "dark";
+      ROOT.setAttribute("data-theme",next);
+      localStorage.setItem(KEY,next);
+      syncBtn();
+    });
+    syncBtn();
+  }
+})();
+
 /* ============ 素材库 ============ */
 const WORDS=[
   ["苹果","香蕉","橘子","葡萄","西瓜","草莓","蓝莓","樱桃","芒果","菠萝","荔枝","龙眼","柚子","椰子","柠檬","石榴"],
@@ -180,7 +297,13 @@ const WORDS=[
   ["快乐","幸福","开心","喜悦","满足","感动","温暖","希望","梦想","勇气","自信","善良","真诚","宽容","乐观","豁达"],
   ["跑步","游泳","篮球","足球","羽毛球","乒乓球","骑车","登山","瑜伽","太极","跳绳","跳远","举重","滑冰","滑雪","慢走"],
   ["春天","夏天","秋天","冬天","春风","夏雨","秋叶","冬雪","阳光","月光","星光","朝霞","晚霞","彩虹","雷雨","清风"],
-  ["海洋","森林","沙漠","草原","高山","河流","湖泊","瀑布","岛屿","冰川","峡谷","丘陵","平原","盆地","沼泽","湿地"]
+  ["海洋","森林","沙漠","草原","高山","河流","湖泊","瀑布","岛屿","冰川","峡谷","丘陵","平原","盆地","沼泽","湿地"],
+  ["点赞","关注","转发","收藏","评论","弹幕","刷屏","硬核","离谱","上头","绝了","破防","emo","躺平","内卷","摆烂"],
+  ["奶茶","可乐","咖啡","果汁","汽水","酸奶","豆浆","柠檬水","蜂蜜","果汁","凉茶","椰子水","白开水","抹茶","拿铁","美式"],
+  ["今天","明天","昨晚","周末","假期","暑假","开学","作业","考试","成绩","老师","同学","食堂","宿舍","操场","教室"],
+  ["拍照","视频","游戏","直播","刷到","看到","听到","想到","说到","吃到","玩到","买到","笑到","累到","聊到","约到"],
+  ["我想","我要","我写","我读","我爱","我恨","我迷","我怕","我敢","我肯","我会","我能","大家","我们","咱们","自个儿"],
+  ["加油","坚持","别怕","稳了","冲鸭","顶住","拿下","搞定","撑住","扛住","熬过","扛过","翻篇","重生","蜕变","起飞"]
 ];
 const SENTENCES=[
   "只要坚持练习，打字速度一定会越来越快。",
@@ -212,7 +335,29 @@ const SENTENCES=[
   "吃得苦中苦，方为人上人。",
   "少壮不努力，老大徒伤悲。",
   "纸上得来终觉浅，绝知此事要躬行。",
-  "自信人生二百年，会当水击三千里。"
+  "自信人生二百年，会当水击三千里。",
+  "今天我想好好练一回打字，把每个键按得更准一点。",
+  "我特别喜欢在周末的下午，一边喝奶茶一边练字。",
+  "我希望有一天，我的打字速度能快到跟不上思路。",
+  "我记得第一次用九键打字，找了半天才按对位置。",
+  "我决定每天坚持练十分钟，积少成多总会有进步。",
+  "我最近迷上了背单词，感觉脑子越用越灵光。",
+  "我发现自己越来越喜欢这种安静专注的感觉了。",
+  "我相信只要肯下功夫，再难的事也能慢慢啃下来。",
+  "我忽然想到，做人就跟打字一样，要一步一个脚印。",
+  "我总爱把喜欢的话抄进本子里，闲了翻一翻。",
+  "我觉得夏天的风，带着西瓜和晚霞的味道。",
+  "我想把每一天都过得有点新意，不辜负青春。",
+  "我这次一定要把长段练完，不看手机不偷懒。",
+  "我笑着对自己说，稳住，你一定能行。",
+  "小丑竟是我自己，搞了半天键盘接反了。",
+  "主打一个真诚，多练几轮手感自然就来了。",
+  "听我说谢谢你，九键真的比全键盘还顺手。",
+  "咱就是说，这波练字直接给我盘明白了。",
+  "家人们谁懂啊，看着进度条涨真的好爽。",
+  "优雅，实在是太优雅了，连键盘都听我的话。",
+  "别卷了别卷了，让我慢慢打不行吗。",
+  "破防了，这字也太难按了，再来一次！"
 ];
 const PASSAGES=[
   "人生就像一场旅行，不必在乎目的地，在乎的是沿途的风景以及看风景的心情。让心灵去旅行，去感受每一段旅程带来的美好与感动。",
@@ -234,7 +379,11 @@ const PASSAGES=[
   "成功从来不是一蹴而就的事，它藏在无数个别人看不见的深夜和拂晓里。你羡慕的那些光鲜，背后都是咬牙坚持的日日夜夜。",
   "岁月是一本无字之书，我们在其中读懂珍惜，读懂感恩。愿你历经千帆，归来仍是少年；愿你出走半生，依然热爱生活。",
   "保持好奇心，是一个人永葆青春的秘诀。世界那么大，值得探索的事物那么多。对未知保持热忱，生活便会永远充满新鲜感与惊喜。",
-  "所谓成长，就是不断地和自己和解，与过去的自己握手言和，然后带着释然与从容，去拥抱每一个新的可能性，成为更好的自己。"
+  "所谓成长，就是不断地和自己和解，与过去的自己握手言和，然后带着释然与从容，去拥抱每一个新的可能性，成为更好的自己。",
+  "这一届少年，生在数字时代，长在屏幕两端。键盘敲出的不只是一串字符，更是我们对世界的回应与好奇。愿每一次敲击，都离理想更近一步。",
+  "夜深人静的时候，指尖在九键上游走。那些按下的声音，像极了心跳的节拍。原来专注本身，就是一件很治愈的事。",
+  "有人说生活是一地鸡毛，可我偏要把它们捡起来，扎成一个漂亮的鸡毛掸子。落下的每一个键，都是我亲手摆正的生活。",
+  "别怕慢，就怕停。今天的你，比昨天多打对了几个字，就是进步。把目标拆小，一撇一捺地写，一日一日地练，终会抵达。"
 ];
 
 /* ============ 状态 ============ */
@@ -390,6 +539,27 @@ function updateStats(){
   document.getElementById("st-errs").textContent=errCount;
 }
 
+/* --- 九键键盘高亮：根据正输入的拼音字母，高亮对应键位 --- */
+const NK_MAP={};(function(){
+  const K={"abc":"2","def":"3","ghi":"4","jkl":"5","mno":"6","pqrs":"7","tuv":"8","wxyz":"9"};
+  for(const [letters,dig] of Object.entries(K)){
+    for(const L of letters) NK_MAP[L]=dig;
+  }
+})();
+const nkEl=document.getElementById("nine-key");
+function updateNineKey(letters){
+  if(!nkEl) return;
+  const ascii=(letters||"").toLowerCase().replace(/[^a-z]/g,"");
+  const hotSet=new Set();
+  for(const L of ascii){ if(NK_MAP[L]) hotSet.add(NK_MAP[L]); }
+  nkEl.querySelectorAll(".nk").forEach(k=>{
+    const key=k.dataset.key;
+    const isHot=hotSet.has(key);
+    k.classList.toggle("hot",isHot);
+    k.classList.toggle("dim", ascii.length>0 && !isHot && key!=="0");
+  });
+}
+
 /* --- 输入处理（核心：差量比对 + 拼音免疫） --- */
 let lastValue="";
 function onInput(){
@@ -410,6 +580,7 @@ function onInput(){
   // 2) 新增内容 = val 相比 lastValue 的尾巴
   const added = val.slice(lastValue.length);
   lastValue=val;
+  updateNineKey(val);
 
   for(const ch of added){
     if(ch==="\n"){ continue; }
