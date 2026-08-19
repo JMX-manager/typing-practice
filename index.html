@@ -16,6 +16,7 @@
     --text:#1e293b; --muted:#64748b;
     --ok:#16a34a; --err:#dc2626; --accent:#0284c7;
     --border:rgba(100,116,139,.18);
+    --dot:#1e293b;
     --glass-blur:14px;
   }
   @media (prefers-color-scheme:dark){
@@ -24,6 +25,7 @@
       --text:#e2e8f0; --muted:#94a3b8;
       --ok:#22c55e; --err:#ef4444; --accent:#38bdf8;
       --border:rgba(148,163,184,.16);
+      --dot:#e2e8f0;
     }
   }
   :root[data-theme="light"]{
@@ -31,12 +33,14 @@
     --text:#1e293b; --muted:#64748b;
     --ok:#16a34a; --err:#dc2626; --accent:#0284c7;
     --border:rgba(100,116,139,.18);
+    --dot:#1e293b;
   }
   :root[data-theme="dark"]{
     --bg:#0f172a; --panel:rgba(30,41,59,.55); --panel2:rgba(30,41,59,.3);
     --text:#e2e8f0; --muted:#94a3b8;
     --ok:#22c55e; --err:#ef4444; --accent:#38bdf8;
     --border:rgba(148,163,184,.16);
+    --dot:#e2e8f0;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   body{
@@ -49,10 +53,12 @@
       radial-gradient(900px 700px at 50% 115%, rgba(168,85,247,.14), transparent 60%);
     background-attachment:fixed;
   }
-  /* 深浅色切换：模糊过渡 */
-  body, header, .mode-btn, .stat, .target-wrap, .now-badge, .nk, .analysis, .btn, .result-card, #ghi{
-    transition: background-color .45s ease, color .45s ease, border-color .45s ease,
-                background .45s ease, box-shadow .45s ease;
+  /* 深浅色切换：模糊过渡（只过渡背景色/文字色，避免触发重绘卡顿） */
+  body, .mode-btn, .stat, .target-wrap, .now-badge, .nk, .analysis, .btn, .result-card, #ghi{
+    transition: background-color .3s ease, color .3s ease, border-color .3s ease;
+  }
+  body{
+    transition: background-color .3s ease;
   }
 
   /* 毛玻璃通用卡片 */
@@ -65,13 +71,14 @@
     box-shadow:0 8px 30px rgba(2,6,23,.08);
   }
   header{
-    padding:16px 18px 10px; text-align:center;
+    padding:16px 18px 14px; text-align:center;
     position:sticky; top:0; z-index:10;
     background:transparent;
+    border-bottom:1px solid var(--border);
   }
   header .hd-row{ display:flex; align-items:center; justify-content:center; position:relative; }
   header h1{
-    font-size:20px; letter-spacing:1px;
+    font-size:19px; letter-spacing:1px; font-weight:600;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
   }
   header h1{color:var(--text);}
@@ -113,16 +120,22 @@
   .stat .lab{font-size:11px; color:var(--muted); margin-top:2px;}
   .pct{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif; font-size:.75em; font-weight:700;}
 
-  /* 主题切换按钮 */
+  /* 主题切换按钮：磨砂小圆点（内部圆点颜色=将要切换到的主题色） */
   .theme-toggle{
-    position:absolute; right:0; top:50%; transform:translateY(-50%);
-    width:36px; height:36px; border-radius:50%;
-    background:var(--panel); color:var(--text);
-    border:1px solid var(--border); font-size:17px; cursor:pointer;
-    display:flex; align-items:center; justify-content:center; transition:.15s;
+    position:absolute; right:2px; top:50%; transform:translateY(-50%);
+    width:30px; height:30px; border-radius:50%; padding:0;
+    background:var(--panel);
+    border:1px solid var(--border); cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
     backdrop-filter:blur(var(--glass-blur)); -webkit-backdrop-filter:blur(var(--glass-blur));
+    box-shadow:0 2px 8px rgba(2,6,23,.08);
   }
-  .theme-toggle:active{transform:translateY(-50%) scale(.9);}
+  .theme-toggle::after{
+    content:""; width:12px; height:12px; border-radius:50%;
+    background:var(--dot);
+    transition:background-color .3s ease;
+  }
+  .theme-toggle:active{transform:translateY(-50%) scale(.88);}
 
   .target-wrap{
     font-family:"PingFangSite",-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;
@@ -235,7 +248,7 @@
 <body>
 <header>
   <div class="hd-row">
-    <button class="theme-toggle" id="theme-toggle" title="切换深浅色">🌙</button>
+    <button class="theme-toggle" id="theme-toggle" title="切换深浅色" aria-label="切换深浅色"></button>
     <h1>⌨️ 打字训练</h1>
   </div>
 </header>
@@ -262,18 +275,6 @@
 
   <div class="now-badge" id="now-badge"></div>
 
-  <div class="nine-key" id="nine-key">
-    <div class="nk" data-key="1"><div class="l">1</div><div class="c">.,?!</div></div>
-    <div class="nk" data-key="2"><div class="l">2</div><div class="c">ABC</div></div>
-    <div class="nk" data-key="3"><div class="l">3</div><div class="c">DEF</div></div>
-    <div class="nk" data-key="4"><div class="l">4</div><div class="c">GHI</div></div>
-    <div class="nk" data-key="5"><div class="l">5</div><div class="c">JKL</div></div>
-    <div class="nk" data-key="6"><div class="l">6</div><div class="c">MNO</div></div>
-    <div class="nk" data-key="7"><div class="l">7</div><div class="c">PQRS</div></div>
-    <div class="nk" data-key="8"><div class="l">8</div><div class="c">TUV</div></div>
-    <div class="nk" data-key="9"><div class="l">9</div><div class="c">WXYZ</div></div>
-  </div>
-
   <div class="target-wrap" id="target"></div>
 
   <div class="input-zone">
@@ -287,6 +288,18 @@
     <ul class="err-list" id="err-list">
       <li class="empty-note">还没有错误，继续保持 ✨</li>
     </ul>
+  </div>
+
+  <div class="nine-key" id="nine-key">
+    <div class="nk" data-key="1"><div class="l">1</div><div class="c">.,?!</div></div>
+    <div class="nk" data-key="2"><div class="l">2</div><div class="c">ABC</div></div>
+    <div class="nk" data-key="3"><div class="l">3</div><div class="c">DEF</div></div>
+    <div class="nk" data-key="4"><div class="l">4</div><div class="c">GHI</div></div>
+    <div class="nk" data-key="5"><div class="l">5</div><div class="c">JKL</div></div>
+    <div class="nk" data-key="6"><div class="l">6</div><div class="c">MNO</div></div>
+    <div class="nk" data-key="7"><div class="l">7</div><div class="c">PQRS</div></div>
+    <div class="nk" data-key="8"><div class="l">8</div><div class="c">TUV</div></div>
+    <div class="nk" data-key="9"><div class="l">9</div><div class="c">WXYZ</div></div>
   </div>
 
   <div class="btns">
@@ -325,11 +338,7 @@
   if(stored==="light"||stored==="dark"){
     ROOT.setAttribute("data-theme",stored);
   }
-  function syncBtn(){
-    const t=ROOT.getAttribute("data-theme")
-      || (window.matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
-    btn.textContent= t==="dark" ? "☀️" : "🌙";
-  }
+  function syncBtn(){}
   if(btn){
     btn.addEventListener("click",function(){
       const cur=ROOT.getAttribute("data-theme")
