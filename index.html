@@ -17,6 +17,7 @@
     --ok:#16a34a; --err:#dc2626; --accent:#0284c7;
     --border:rgba(100,116,139,.18);
     --dot:#1e293b;
+    --navbg:rgba(238,242,248,.72);
     --glass-blur:14px;
   }
   @media (prefers-color-scheme:dark){
@@ -26,6 +27,7 @@
       --ok:#22c55e; --err:#ef4444; --accent:#38bdf8;
       --border:rgba(148,163,184,.16);
       --dot:#e2e8f0;
+      --navbg:rgba(15,23,42,.6);
     }
   }
   :root[data-theme="light"]{
@@ -34,6 +36,7 @@
     --ok:#16a34a; --err:#dc2626; --accent:#0284c7;
     --border:rgba(100,116,139,.18);
     --dot:#1e293b;
+    --navbg:rgba(238,242,248,.72);
   }
   :root[data-theme="dark"]{
     --bg:#0f172a; --panel:rgba(30,41,59,.55); --panel2:rgba(30,41,59,.3);
@@ -41,6 +44,7 @@
     --ok:#22c55e; --err:#ef4444; --accent:#38bdf8;
     --border:rgba(148,163,184,.16);
     --dot:#e2e8f0;
+    --navbg:rgba(15,23,42,.6);
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   body{
@@ -73,15 +77,17 @@
   header{
     padding:16px 18px 14px; text-align:center;
     position:sticky; top:0; z-index:10;
-    background:transparent;
+    background:var(--navbg);
+    backdrop-filter:blur(18px) saturate(1.3);
+    -webkit-backdrop-filter:blur(18px) saturate(1.3);
     border-bottom:1px solid var(--border);
   }
   header .hd-row{ display:flex; align-items:center; justify-content:center; position:relative; }
   header h1{
-    font-size:19px; letter-spacing:1px; font-weight:600;
+    font-size:16px; letter-spacing:.6px; font-weight:500;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    color:var(--text);
   }
-  header h1{color:var(--text);}
   /* 去掉第二排介绍 */
   main{flex:1; padding:16px; max-width:760px; width:100%; margin:0 auto;}
 
@@ -99,6 +105,13 @@
     transition:width .5s ease;
   }
   .lv-goal{ font-size:12px; color:var(--muted); white-space:nowrap; }
+  .lv-arrow{
+    width:26px; height:26px; border-radius:50%; flex:none;
+    background:var(--panel2); color:var(--muted);
+    border:1px solid var(--border); font-size:16px; line-height:1;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .lv-arrow:active{ transform:scale(.9); }
 
   .modes{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;}
   .mode-btn{
@@ -249,15 +262,17 @@
 <header>
   <div class="hd-row">
     <button class="theme-toggle" id="theme-toggle" title="切换深浅色" aria-label="切换深浅色"></button>
-    <h1>⌨️ 打字训练</h1>
+    <h1>Typing Trainer</h1>
   </div>
 </header>
 
 <main>
   <div class="levelbar glass">
-    <div class="lv-info"><span class="lv-ico">🏅</span><span id="lv-now">第 1 关</span></div>
+    <button class="lv-arrow" id="lv-prev" aria-label="上一关">‹</button>
+    <div class="lv-info"><span class="lv-ico">●</span><span id="lv-now">第 1 关</span></div>
     <div class="lv-track"><div class="lv-fill" id="lv-fill" style="width:0%"></div></div>
-    <div class="lv-goal" id="lv-goal">再完成 3 段到下一关</div>
+    <div class="lv-goal" id="lv-goal">再完成 3 轮升到下一关</div>
+    <button class="lv-arrow" id="lv-next" aria-label="下一关">›</button>
   </div>
 
   <div class="modes">
@@ -326,7 +341,7 @@
   </div>
 </div>
 
-<footer>⌨️ Typing Trainer</footer>
+<footer>Typing Trainer</footer>
 
 <script>
 /* ============ 主题：自动深浅色 + 手动覆盖 ============ */
@@ -373,22 +388,46 @@ const WORDS=[
   ["天空","大海","星辰","月亮","太阳","云朵","晚霞","彩虹","山谷","石桥","钟楼","灯塔","沙滩","银杏","枫叶","落雪"],
   ["专注","宁静","沉淀","自律","成长","突破","超越","卓越","谦逊","感恩","同理","尊重","担当","探索","创新","传承"]
 ];
-const SENTENCES=[
+const SENT_SIMPLE=[
   "只要坚持练习，打字速度一定会越来越快。",
   "每天进步一点点，积少成多，终会看见改变。",
   "科技让生活更美好，也让学习变得更高效。",
   "用心做好每一件小事，就是最大的不平凡。",
   "读万卷书，行万里路，见识更广阔的世界。",
-  "没有什么成功是一蹴而就的，唯有日复一日地坚持。",
-  "把复杂的事情简单化，把简单的事情重复做。",
   "清晨的阳光照进窗台，新的一天又开始了。",
-  "真正的强者，不是没有眼泪的人，而是含着眼泪奔跑的人。",
   "生活不会辜负每一个认真努力的人。",
+  "世上无难事，只怕有心人，坚持到底就能看到希望。",
+  "今天我想好好练一回打字，把每个键按得更准一点。",
+  "我特别喜欢在周末的下午，一边喝奶茶一边练字。",
+  "我记得第一次用九键打字，找了半天才按对位置。",
+  "我决定每天坚持练十分钟，积少成多总会有进步。",
+  "我相信只要肯下功夫，再难的事也能慢慢啃下来。",
+  "我觉得夏天的风，带着西瓜和晚霞的味道。",
+  "我想把每一天都过得有点新意，不辜负青春。"
+];
+const SENT_MID=[
+  "把复杂的事情简单化，把简单的事情重复做。",
+  "没有什么成功是一蹴而就的，唯有日复一日地坚持。",
+  "真正的强者，不是没有眼泪的人，而是含着眼泪奔跑的人。",
   "别人拥有的，你不必羡慕，只要努力，你也会拥有。",
   "不要因为一次的失败，就放弃你原来决心想达到的目的。",
-  "世上无难事，只怕有心人，坚持到底就能看到希望。",
   "每一次努力，都是成长的阶梯；每一次坚持，都是成功的铺垫。",
   "聪明的人把握机会，勤奋的人创造机会，勇敢的人抓住未来。",
+  "我总爱把喜欢的话抄进本子里，闲了翻一翻。",
+  "我发现自己越来越喜欢这种安静专注的感觉了。",
+  "我最近迷上了背单词，感觉脑子越用越灵光。",
+  "我忽然想到，做人就跟打字一样，要一步一个脚印。",
+  "我笑着对自己说，稳住，你一定能行。",
+  "我希望有一天，我的打字速度能快到跟不上思路。",
+  "我这次一定要把长段练完，不看手机不偷懒。",
+  "听我说谢谢你，九键真的比全键盘还顺手。",
+  "咱就是说，这波练字直接给我盘明白了。",
+  "家人们谁懂啊，看着进度条涨真的好爽。",
+  "优雅，实在是太优雅了，连键盘都听我的话。",
+  "别卷了别卷了，让我慢慢打不行吗。",
+  "小丑竟是我自己，搞了半天键盘接反了。"
+];
+const SENT_HARD=[
   "路漫漫其修远兮，吾将上下而求索。",
   "长风破浪会有时，直挂云帆济沧海。",
   "海内存知己，天涯若比邻。",
@@ -404,55 +443,37 @@ const SENTENCES=[
   "少壮不努力，老大徒伤悲。",
   "纸上得来终觉浅，绝知此事要躬行。",
   "自信人生二百年，会当水击三千里。",
-  "今天我想好好练一回打字，把每个键按得更准一点。",
-  "我特别喜欢在周末的下午，一边喝奶茶一边练字。",
-  "我希望有一天，我的打字速度能快到跟不上思路。",
-  "我记得第一次用九键打字，找了半天才按对位置。",
-  "我决定每天坚持练十分钟，积少成多总会有进步。",
-  "我最近迷上了背单词，感觉脑子越用越灵光。",
-  "我发现自己越来越喜欢这种安静专注的感觉了。",
-  "我相信只要肯下功夫，再难的事也能慢慢啃下来。",
-  "我忽然想到，做人就跟打字一样，要一步一个脚印。",
-  "我总爱把喜欢的话抄进本子里，闲了翻一翻。",
-  "我觉得夏天的风，带着西瓜和晚霞的味道。",
-  "我想把每一天都过得有点新意，不辜负青春。",
-  "我这次一定要把长段练完，不看手机不偷懒。",
-  "我笑着对自己说，稳住，你一定能行。",
-  "小丑竟是我自己，搞了半天键盘接反了。",
-  "主打一个真诚，多练几轮手感自然就来了。",
-  "听我说谢谢你，九键真的比全键盘还顺手。",
-  "咱就是说，这波练字直接给我盘明白了。",
-  "家人们谁懂啊，看着进度条涨真的好爽。",
-  "优雅，实在是太优雅了，连键盘都听我的话。",
-  "别卷了别卷了，让我慢慢打不行吗。",
-  "破防了，这字也太难按了，再来一次！",
   "少年的肩膀，本该先挑起清风明月，再把理想装进行囊。",
   "愿我们都能像清晨一样，朝气蓬勃，干净明亮，奔赴山海。",
   "键盘是笔，屏幕是纸，我在此间写下关于成长的所有情绪。",
   "不必光芒万丈，只需温润有光，稳稳地走在自己的路上。",
   "把日子过成一首诗，慢一点没关系，只要方向是对的。"
 ];
-const PASSAGES=[
+const PASS_SHORT=[
   "人生就像一场旅行，不必在乎目的地，在乎的是沿途的风景以及看风景的心情。让心灵去旅行，去感受每一段旅程带来的美好与感动。",
   "读书使人充实，讨论使人机智，笔记使人准确。读史使人明智，读诗使人灵秀，数学使人周密，科学使人深刻。凡有所学，皆成性格。",
   "时间是最公平的，它给每个人都是二十四小时。差别只在于如何利用。善于利用时间的人，总能在平凡中创造不平凡的价值，在忙碌中收获充实。",
+  "梦想是什么，梦想就是一种让你感到坚持就是幸福的东西。甚至被视为一种信仰，正因为如此，梦想才如此珍贵，值得我们用一生去追逐。",
+  "勤奋是通往成功的必经之路。天才出于勤奋，汗水浇灌梦想。世上没有白费的努力，更没有碰巧的成功，一切成就都源于日复一日的耕耘。",
+  "每一个清晨都是新的开始。无论昨天经历了什么，今天都有机会重新出发。带着希望启程，带着感恩前行，把每一天都过成值得纪念的模样。",
+  "友谊是人生最宝贵的财富之一。真正的朋友，不需要天天见面，只需在彼此需要的时候，能伸出一双温暖的手，说一声我在这里。",
+  "生活总在平淡中透着真味。一餐一饭，一朝一夕，看似寻常，却是最踏实的人间烟火。懂得珍惜平凡，才能在平凡中活出不平凡的光彩。"
+];
+const PASS_MID=[
   "每个人都有一段沉默的时光，那段时间是付出了很多努力却得不到结果的日子，我们把它叫做扎根。根扎得越深，向上生长得就越有力。",
   "生活不是等待风暴过去，而是学会在雨中跳舞。面对困难与挑战，我们或许无法选择环境，但可以选择态度，用乐观和坚韧书写属于自己的故事。",
-  "梦想是什么，梦想就是一种让你感到坚持就是幸福的东西。甚至被视为一种信仰，正因为如此，梦想才如此珍贵，值得我们用一生去追逐。",
   "青春是一本太仓促的书，我们含着泪一读再读。那些拼搏的日子，那些跌倒又爬起的瞬间，都成了后来最闪亮的勋章。",
   "大自然是一位伟大的艺术家。春天的花，夏天的雨，秋天的果实，冬天的白雪，四季轮转，每一刻都藏着不容错过的美丽与奇迹。",
-  "友谊是人生最宝贵的财富之一。真正的朋友，不需要天天见面，只需在彼此需要的时候，能伸出一双温暖的手，说一声我在这里。",
-  "勤奋是通往成功的必经之路。天才出于勤奋，汗水浇灌梦想。世上没有白费的努力，更没有碰巧的成功，一切成就都源于日复一日的耕耘。",
   "我们常常仰望星空，却忘了脚踏实地。抬头看路是为了看清方向，低头赶路是为了走得更远。既有远大的理想，也有坚定的步伐，方能抵达彼岸。",
   "人这一生，会经历许多风雨。有人选择逃避，有人选择勇敢面对。其实风雨过后，往往是更澄澈的天空，更壮丽的彩虹，更丰盈的自己。",
   "学习如逆水行舟，不进则退。唯有不断更新自己的知识，拓宽自己的视野，才能在日新月异的时代里保持从容，不被时代的洪流所淘汰。",
-  "生活总在平淡中透着真味。一餐一饭，一朝一夕，看似寻常，却是最踏实的人间烟火。懂得珍惜平凡，才能在平凡中活出不平凡的光彩。",
-  "每一个清晨都是新的开始。无论昨天经历了什么，今天都有机会重新出发。带着希望启程，带着感恩前行，把每一天都过成值得纪念的模样。",
   "真正的成熟，不是学会了表达，而是学会了沉默，学会了倾听，学会了在喧嚣中守住内心的宁静，在纷扰中看清真实的自己。",
   "成功从来不是一蹴而就的事，它藏在无数个别人看不见的深夜和拂晓里。你羡慕的那些光鲜，背后都是咬牙坚持的日日夜夜。",
+  "所谓成长，就是不断地和自己和解，与过去的自己握手言和，然后带着释然与从容，去拥抱每一个新的可能性，成为更好的自己。"
+];
+const PASS_LONG=[
   "岁月是一本无字之书，我们在其中读懂珍惜，读懂感恩。愿你历经千帆，归来仍是少年；愿你出走半生，依然热爱生活。",
   "保持好奇心，是一个人永葆青春的秘诀。世界那么大，值得探索的事物那么多。对未知保持热忱，生活便会永远充满新鲜感与惊喜。",
-  "所谓成长，就是不断地和自己和解，与过去的自己握手言和，然后带着释然与从容，去拥抱每一个新的可能性，成为更好的自己。",
   "这一届少年，生在数字时代，长在屏幕两端。键盘敲出的不只是一串字符，更是我们对世界的回应与好奇。愿每一次敲击，都离理想更近一步。",
   "夜深人静的时候，指尖在九键上游走。那些按下的声音，像极了心跳的节拍。原来专注本身，就是一件很治愈的事。",
   "有人说生活是一地鸡毛，可我偏要把它们捡起来，扎成一个漂亮的鸡毛掸子。落下的每一个键，都是我亲手摆正的生活。",
@@ -462,42 +483,52 @@ const PASSAGES=[
   "人生海海，山山而川。愿你在这漫长的打字练习里，也能学会耐心、专注与坚持——这些品质，会陪你走过更远的路。"
 ];
 
-/* ============ 状态 ============ */
-let mode="words";
-// 关卡：lv 从 1 开始，每关需完成 goal 轮
+/* ============ 关卡：由易到难的难度档位（可切换） ============ */
 const LEVELS=[
-  { goal:2,  name:"新手上路" },
-  { goal:3,  name:"渐入佳境" },
-  { goal:4,  name:"得心应手" },
-  { goal:5,  name:"稳中带快" },
-  { goal:6,  name:"一目十行" }
+  { words:6,  sent:"SIMPLE", pass:"SHORT", name:"新手上路" },
+  { words:8,  sent:"SIMPLE", pass:"SHORT", name:"渐入佳境" },
+  { words:10, sent:"MID",    pass:"MID",   name:"得心应手" },
+  { words:12, sent:"HARD",   pass:"MID",   name:"稳中带快" },
+  { words:15, sent:"HARD",   pass:"LONG",  name:"一目十行" }
 ];
 const LV_KEY="tp-level";
 let lv=1, lvProg=0;
 function loadLevel(){
   const s=localStorage.getItem(LV_KEY);
-  if(s){ const a=s.split(":"); lv=+a[0]||1; lvProg=+a[1]||0; }
+  if(s){ const a=s.split(":"); lv=Math.min(LEVELS.length, Math.max(1,+a[0]||1)); lvProg=+a[1]||0; }
 }
 function saveLevel(){ localStorage.setItem(LV_KEY, lv+":"+lvProg); }
 function levelInfo(){
-  return { idx:Math.min(lv,LEVELS.length), max:LEVELS.length,
-           goal:LEVELS[Math.min(lv,LEVELS.length)-1].goal,
-           name:LEVELS[Math.min(lv,LEVELS.length)-1].name };
+  return { idx:lv, max:LEVELS.length,
+           goal:LEVELS[lv-1].words,
+           name:LEVELS[lv-1].name };
 }
 function renderLevel(){
   const li=levelInfo();
+  const L=LEVELS[lv-1];
+  const GOAL_ROUNDS=3;
   const el=document.getElementById("lv-now");
   const fill=document.getElementById("lv-fill");
   const goal=document.getElementById("lv-goal");
-  if(el) el.textContent = "第 "+li.idx+" 关 · "+li.name;
-  if(fill) fill.style.width=Math.min(100, Math.round(lvProg/li.goal*100))+"%";
+  const prev=document.getElementById("lv-prev");
+  const next=document.getElementById("lv-next");
+  if(el) el.textContent = "第 "+li.idx+" 关 · "+L.name;
+  if(fill) fill.style.width=Math.min(100, Math.round(lvProg/GOAL_ROUNDS*100))+"%";
   if(goal){
-    const left=li.goal-lvProg;
-    if(lv>=LEVELS.length && left<=0) goal.textContent="🏆 已通关，继续创造纪录！";
-    else if(left<=0) goal.textContent="🎉 准备升关…";
-    else goal.textContent="再完成 "+left+" 轮到下一关";
+    const left=GOAL_ROUNDS-lvProg;
+    if(lv>=LEVELS.length && left<=0) goal.textContent="已通关！可挑战任意关卡";
+    else if(left<=0) goal.textContent="进度已满，再完成一轮即可升关";
+    else goal.textContent="再完成 "+left+" 轮升到下一关";
   }
+  if(prev) prev.style.visibility = lv<=1 ? "hidden" : "visible";
+  if(next) next.style.visibility = lv>=LEVELS.length ? "hidden" : "visible";
 }
+function setLevel(to){
+  lv=Math.min(LEVELS.length, Math.max(1,to)); lvProg=0; saveLevel(); renderLevel();
+  finishClose();
+  finished=false; currentWordInput=""; startNew();
+}
+function lvStep(dir){ setLevel(lv+dir); }
 let text="";            
 let chars=[];          
 let pos=0;              // 已正确完成的字符数（累积）
@@ -545,13 +576,18 @@ function buildItems(){
 
 /* --- 初始化/切换 --- */
 function pickText(){
+  const L=LEVELS[lv-1];
   if(mode==="words"){
-    const arr=WORDS[Math.floor(Math.random()*WORDS.length)];
-    // 打乱顺序
-    return arr.slice().sort(()=>Math.random()-.5).join(" ");
+    // 每个词条数组都是一个主题，随机选主题后打乱，按该关词数截取
+    const arr0=WORDS[Math.floor(Math.random()*WORDS.length)];
+    const arr=arr0.slice().sort(()=>Math.random()-.5).slice(0, L.words);
+    return arr.join(" ");
+  }else if(mode==="sentences"){
+    const pool= L.sent==="SIMPLE" ? SENT_SIMPLE : (L.sent==="HARD" ? SENT_HARD : SENT_MID);
+    return pool[Math.floor(Math.random()*pool.length)];
   }else{
-    const arr=mode==="sentences"?SENTENCES:PASSAGES;
-    return arr[Math.floor(Math.random()*arr.length)];
+    const pool= L.pass==="SHORT" ? PASS_SHORT : (L.pass==="LONG" ? PASS_LONG : PASS_MID);
+    return pool[Math.floor(Math.random()*pool.length)];
   }
 }
 function startNew(){
@@ -882,22 +918,29 @@ function finish(){
   document.getElementById("r-grade").textContent=g;
   document.getElementById("r-motto").textContent=m;
 
-  /* 推进关卡 */
+  /* 推进关卡：每完成一轮 +1，满 3 轮自动升一关 */
+  const GOAL_ROUNDS=3;
   lvProg++;
-  const li=levelInfo();
   let leveledUp=false;
-  if(lvProg>=li.goal && lv<LEVELS.length){ lv++; lvProg=0; leveledUp=true; }
+  if(lvProg>=GOAL_ROUNDS && lv<LEVELS.length){ lv++; lvProg=0; leveledUp=true; }
   saveLevel();
   renderLevel();
   if(leveledUp){
-    document.getElementById("r-motto").textContent = "🎉 升到第 "+lv+" 关「"+levelInfo().name+"」！"+m;
+    document.getElementById("r-motto").textContent = "升到第 "+lv+" 关「"+levelInfo().name+"」！"+m;
+    // 升关后立即换更难的下一轮
+    const nextMode=mode;
+    setTimeout(()=>{ finished=false; currentWordInput=""; mode=nextMode; startNew(); },0);
   }
 
   document.getElementById("result").classList.add("show");
   g.blur();
 }
+function finishClose(){
+  const r=document.getElementById("result");
+  if(r) r.classList.remove("show");
+}
 function closeResult(){
-  document.getElementById("result").classList.remove("show");
+  finishClose();
   g.focus();
 }
 
@@ -919,6 +962,8 @@ document.querySelectorAll(".mode-btn").forEach(b=>{
 });
 document.getElementById("btn-restart").addEventListener("click",()=>{ finished=false; currentWordInput=""; reset(); g.focus(); });
 document.getElementById("btn-skip").addEventListener("click",()=>{ finished=false; currentWordInput=""; startNew(); });
+document.getElementById("lv-prev").addEventListener("click",()=>lvStep(-1));
+document.getElementById("lv-next").addEventListener("click",()=>lvStep(1));
 targetEl.addEventListener("click",()=>g.focus());
 document.getElementById("btn-again").addEventListener("click",()=>{
   document.getElementById("result").classList.remove("show");
