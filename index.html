@@ -9,6 +9,7 @@
     font-family:"PingFangSite";
     src:url("assets/font.woff2") format("woff2");
     font-weight:400; font-style:normal; font-display:swap;
+    /* 苹方风格字库；font-display:swap 保证首帧系统字体、加载后无缝切换苹方 */
   }
   :root{
     color-scheme:light dark;
@@ -93,25 +94,43 @@
 
   /* 关卡进度条 */
   .levelbar{
-    display:flex; align-items:center; gap:10px;
-    padding:9px 12px; margin-bottom:12px; border-radius:12px;
+    margin-bottom:14px; border-radius:16px; padding:12px 14px;
   }
-  .lv-info{ display:flex; align-items:center; gap:6px; font-size:14px; font-weight:500; color:var(--text); white-space:nowrap; }
-  .lv-ico{ font-size:16px; }
-  .lv-track{ flex:1; height:8px; border-radius:99px; background:var(--panel2); overflow:hidden; }
+  .lv-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .lv-badge{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:15px; font-weight:600; color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;
+  }
+  .lv-num{
+    font-size:12px; font-weight:600; color:#fff;
+    background:linear-gradient(135deg,var(--accent),#38bdf8);
+    padding:3px 9px; border-radius:99px; letter-spacing:.5px;
+  }
+  .lv-name{} 
+  .lv-count{ font-size:12px; color:var(--muted); }
+  .lv-dots{ display:flex; gap:8px; margin-bottom:10px; }
+  .lv-dot{
+    flex:1; height:30px; border-radius:10px; border:1px solid var(--border);
+    background:var(--panel2); color:var(--muted); font-size:12px;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:background-color .2s, color .2s, border-color .2s, transform .15s;
+  }
+  .lv-dot.active{
+    background:linear-gradient(135deg,var(--accent),#38bdf8);
+    color:#fff; border-color:transparent; font-weight:600;
+    box-shadow:0 3px 10px rgba(2,132,199,.35);
+  }
+  .lv-dot.done{ background:var(--panel2); color:var(--ok); border-color:var(--ok); }
+  .lv-dot:active{ transform:scale(.94); }
+  .lv-prog-wrap{ display:flex; align-items:center; gap:10px; }
+  .lv-track{ flex:1; height:6px; border-radius:99px; background:var(--panel2); overflow:hidden; }
   .lv-fill{
     height:100%; border-radius:99px;
     background:linear-gradient(90deg,var(--accent),#38bdf8);
     transition:width .5s ease;
   }
   .lv-goal{ font-size:12px; color:var(--muted); white-space:nowrap; }
-  .lv-arrow{
-    width:26px; height:26px; border-radius:50%; flex:none;
-    background:var(--panel2); color:var(--muted);
-    border:1px solid var(--border); font-size:16px; line-height:1;
-    cursor:pointer; display:flex; align-items:center; justify-content:center;
-  }
-  .lv-arrow:active{ transform:scale(.9); }
 
   .modes{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;}
   .mode-btn{
@@ -133,22 +152,16 @@
   .stat .lab{font-size:11px; color:var(--muted); margin-top:2px;}
   .pct{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif; font-size:.75em; font-weight:700;}
 
-  /* 主题切换按钮：磨砂小圆点（内部圆点颜色=将要切换到的主题色） */
+  /* 主题切换按钮：极简小圆点 */
   .theme-toggle{
-    position:absolute; right:2px; top:50%; transform:translateY(-50%);
-    width:30px; height:30px; border-radius:50%; padding:0;
-    background:var(--panel);
-    border:1px solid var(--border); cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
-    backdrop-filter:blur(var(--glass-blur)); -webkit-backdrop-filter:blur(var(--glass-blur));
-    box-shadow:0 2px 8px rgba(2,6,23,.08);
-  }
-  .theme-toggle::after{
-    content:""; width:12px; height:12px; border-radius:50%;
+    position:absolute; right:4px; top:50%; transform:translateY(-50%);
+    width:26px; height:26px; border-radius:50%; padding:0;
     background:var(--dot);
-    transition:background-color .3s ease;
+    border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background-color .3s ease, transform .15s ease;
   }
-  .theme-toggle:active{transform:translateY(-50%) scale(.88);}
+  .theme-toggle:active{transform:translateY(-50%) scale(.82);}
 
   .target-wrap{
     font-family:"PingFangSite",-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;
@@ -268,11 +281,15 @@
 
 <main>
   <div class="levelbar glass">
-    <button class="lv-arrow" id="lv-prev" aria-label="上一关">‹</button>
-    <div class="lv-info"><span class="lv-ico">●</span><span id="lv-now">第 1 关</span></div>
-    <div class="lv-track"><div class="lv-fill" id="lv-fill" style="width:0%"></div></div>
-    <div class="lv-goal" id="lv-goal">再完成 3 轮升到下一关</div>
-    <button class="lv-arrow" id="lv-next" aria-label="下一关">›</button>
+    <div class="lv-top">
+      <div class="lv-badge"><span class="lv-num" id="lv-now">第 1 关</span><span class="lv-name" id="lv-name">新手上路</span></div>
+      <div class="lv-count" id="lv-count">1 / 5</div>
+    </div>
+    <div class="lv-dots" id="lv-dots"></div>
+    <div class="lv-prog-wrap">
+      <div class="lv-track"><div class="lv-fill" id="lv-fill" style="width:0%"></div></div>
+      <div class="lv-goal" id="lv-goal">再完成 3 轮升到下一关</div>
+    </div>
   </div>
 
   <div class="modes">
@@ -508,27 +525,39 @@ function renderLevel(){
   const L=LEVELS[lv-1];
   const GOAL_ROUNDS=3;
   const el=document.getElementById("lv-now");
+  const nameEl=document.getElementById("lv-name");
+  const countEl=document.getElementById("lv-count");
   const fill=document.getElementById("lv-fill");
   const goal=document.getElementById("lv-goal");
-  const prev=document.getElementById("lv-prev");
-  const next=document.getElementById("lv-next");
-  if(el) el.textContent = "第 "+li.idx+" 关 · "+L.name;
+  const dots=document.getElementById("lv-dots");
+  if(el) el.textContent = "第 "+li.idx+" 关";
+  if(nameEl) nameEl.textContent = L.name;
+  if(countEl) countEl.textContent = li.idx+" / "+li.max;
   if(fill) fill.style.width=Math.min(100, Math.round(lvProg/GOAL_ROUNDS*100))+"%";
   if(goal){
     const left=GOAL_ROUNDS-lvProg;
     if(lv>=LEVELS.length && left<=0) goal.textContent="已通关！可挑战任意关卡";
     else if(left<=0) goal.textContent="进度已满，再完成一轮即可升关";
-    else goal.textContent="再完成 "+left+" 轮升到下一关";
+    else goal.textContent="再 "+left+" 轮升下一关";
   }
-  if(prev) prev.style.visibility = lv<=1 ? "hidden" : "visible";
-  if(next) next.style.visibility = lv>=LEVELS.length ? "hidden" : "visible";
+  if(dots){
+    dots.innerHTML="";
+    LEVELS.forEach((Lv,i)=>{
+      const d=document.createElement("button");
+      d.className="lv-dot";
+      d.textContent=i+1;
+      if(i+1<lv) d.classList.add("done");
+      if(i+1===lv) d.classList.add("active");
+      d.addEventListener("click",()=>{ if(i+1!==lv) setLevel(i+1); });
+      dots.appendChild(d);
+    });
+  }
 }
 function setLevel(to){
   lv=Math.min(LEVELS.length, Math.max(1,to)); lvProg=0; saveLevel(); renderLevel();
   finishClose();
   finished=false; currentWordInput=""; startNew();
 }
-function lvStep(dir){ setLevel(lv+dir); }
 let text="";            
 let chars=[];          
 let pos=0;              // 已正确完成的字符数（累积）
@@ -962,8 +991,6 @@ document.querySelectorAll(".mode-btn").forEach(b=>{
 });
 document.getElementById("btn-restart").addEventListener("click",()=>{ finished=false; currentWordInput=""; reset(); g.focus(); });
 document.getElementById("btn-skip").addEventListener("click",()=>{ finished=false; currentWordInput=""; startNew(); });
-document.getElementById("lv-prev").addEventListener("click",()=>lvStep(-1));
-document.getElementById("lv-next").addEventListener("click",()=>lvStep(1));
 targetEl.addEventListener("click",()=>g.focus());
 document.getElementById("btn-again").addEventListener("click",()=>{
   document.getElementById("result").classList.remove("show");
